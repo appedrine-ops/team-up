@@ -21,6 +21,77 @@
     .auth-overlay{position:fixed;inset:0;background:#111827aa;display:grid;place-items:center;padding:18px;z-index:50}.auth-card{width:min(100%,420px);background:#fff;border-radius:22px;padding:26px;box-shadow:0 25px 80px #0003}.auth-card h2{margin:0 0 8px;font-size:24px}.auth-card p{color:var(--muted);font-size:13px;line-height:1.5}.auth-card input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;margin:6px 0 10px}.auth-card button{padding:11px 14px;border:0;border-radius:10px;background:var(--brand);color:white;font-weight:750}.google-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;margin:14px 0 10px;background:#fff!important;color:#273043!important;border:1px solid #dfe3ec!important;box-shadow:0 2px 8px #1b25400b}.google-g{font-weight:900;font-size:18px;background:conic-gradient(from -45deg,#4285f4 0 25%,#34a853 0 50%,#fbbc05 0 75%,#ea4335 0);background-clip:text;-webkit-background-clip:text;color:transparent}.auth-actions{display:flex;gap:8px;flex-wrap:wrap}.auth-actions .secondary{background:#f0edff;color:var(--brand)}.auth-error{color:#b91c1c;font-size:12px;min-height:16px}.mobile-menu{display:none}.empty{text-align:center;color:var(--muted);font-size:13px;padding:25px 5px}.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:#172033;color:#fff;padding:11px 16px;border-radius:12px;font-size:12px;opacity:0;pointer-events:none;transition:.2s;box-shadow:0 8px 25px #0002;z-index:20}.toast.show{opacity:1;transform:translate(-50%,0)}
     @media(max-width:1050px){.app{grid-template-columns:220px minmax(280px,1fr)}.rightbar{display:none}}
     @media(max-width:650px){.app{display:block}.sidebar{display:none}.main{height:100dvh;min-height:520px}.topbar{height:72px;padding:0 14px}.topbar .mobile-menu{display:grid}.messages{padding:18px 13px}.bubble-wrap{max-width:84%}.composer-wrap{padding:10px 12px 13px}.hint{display:none}.topbar h1{font-size:15px}}
+
+    /* TEAM-UP dark mobile chat refresh — inspired by familiar chat patterns, with original styling */
+    :root{--brand:#20c875;--brand2:#16a765;--ink:#e9edef;--muted:#9aa4a9;--line:#263238;--bg:#0b141a;--panel:#111b21;--soft:#1f302b;--green:#20c875}
+    body{background:#0b141a;color:var(--ink)}
+    .app{background:#111b21;box-shadow:none}
+    .sidebar,.rightbar{background:#111b21;border-color:#263238}
+    .brand-mark{background:linear-gradient(135deg,#20c875,#0b9d62);box-shadow:none;color:#062c1b}
+    .section-label{color:#829198}
+    .nav{color:#bdc7cb}
+    .nav.active,.nav:hover{background:#1f302b;color:#42d692}
+    .nav .count{background:#20c875;color:#092b1c}
+    .profile{border-color:#263238}
+    .avatar{background:linear-gradient(135deg,#087e68,#20c875);color:#f1fff7}
+    .avatar.purple{background:linear-gradient(135deg,#087e68,#20c875)}
+    .avatar.blue{background:linear-gradient(135deg,#075985,#0e7490)}
+    .avatar.green{background:linear-gradient(135deg,#047857,#10b981)}
+    .avatar.gold{background:linear-gradient(135deg,#a16207,#ca8a04)}
+    .topbar{background:#111b21;border-color:#263238}
+    .topbar h1{color:#e9edef}
+    .topbar p,.contact-info small{color:#9aa4a9}
+    .icon-btn{background:#202c33;border-color:#202c33;color:#c8d1d5;border-radius:50%}
+    .icon-btn:hover{background:#2a3942;color:#42d692}
+    .messages{background-color:#0b141a;background-image:radial-gradient(circle at 20px 20px,#18252c 1.2px,transparent 1.5px),radial-gradient(circle at 70px 65px,#16232a 1px,transparent 1.4px);background-size:100px 100px;padding-top:20px}
+    .day{color:#aebac0;background:#182229;border-radius:8px;padding:7px 12px;width:max-content;max-width:90%;margin:0 auto 22px}
+    .sender{color:#43d69a}
+    .bubble{background:#202c33;color:#e9edef;border-radius:10px 10px 10px 3px}
+    .mine .bubble{background:#005c4b;color:#e9edef;border-radius:10px 10px 3px 10px}
+    .time{color:#a6b4ba}
+    .composer-wrap{background:#111b21;border-color:#263238}
+    .tools{margin-bottom:6px}
+    .tool{color:#aebac0}
+    .tool:hover{background:#20322c;color:#42d692}
+    .composer{background:#202c33;border:0;border-radius:28px;box-shadow:none;padding:7px 8px 7px 17px}
+    .composer textarea{color:#e9edef}
+    .composer textarea::placeholder{color:#86949b}
+    .send{background:#20c875;color:#062c1b;border-radius:50%;width:43px;height:43px}
+    .send:hover{background:#42d692}
+    .hint{color:#819097}
+    .search{background:#202c33;border-color:#202c33;border-radius:12px}
+    .search input{color:#e9edef}
+    .contact{color:#e9edef}
+    .contact:hover{background:#1b292f}
+    .contact-info strong{color:#e9edef}
+    .status{background:#58666d}
+    .status.on{background:#20c875}
+    .resource{background:#202c33}
+    .resource small{color:#9aa4a9}
+    .call-card{background:linear-gradient(145deg,#075e4d,#087f5b);color:#e9fff4}
+    .call-card p{color:#d1f7e6}
+    .call-card button{color:#075e4d}
+    .auth-overlay{background:#061014e8}
+    .auth-card{background:#111b21;color:#e9edef;border:1px solid #263238;box-shadow:0 25px 80px #0008}
+    .auth-card p{color:#aab6bb}
+    .auth-card input{background:#202c33;color:#e9edef;border-color:#34434b}
+    .auth-card button:not(.google-btn){background:#20c875;color:#062c1b}
+    .google-btn{background:#202c33!important;color:#e9edef!important;border-color:#34434b!important}
+    .auth-error{color:#ff9c9c}
+    .toast{background:#202c33;color:#e9edef}
+    @media(max-width:650px){
+      body{background:#0b141a}
+      .app{background:#0b141a}
+      .main{background:#0b141a}
+      .topbar{height:72px;padding:0 13px}
+      .topbar .avatar{width:42px;height:42px}
+      .messages{padding:17px 12px;background-size:88px 88px}
+      .bubble-wrap{max-width:86%}
+      .composer-wrap{padding:8px 9px max(10px,env(safe-area-inset-bottom))}
+      .tools{display:none}
+      .composer{gap:8px}
+      .send{flex:none}
+    }
   </style>
 </head>
 <body>
