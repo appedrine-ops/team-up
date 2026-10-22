@@ -113,6 +113,8 @@ svg{width:1em;height:1em;display:block}
 .lightbox{background:#000e;z-index:100;cursor:zoom-out}.lightbox img{max-width:100%;max-height:100%;border-radius:10px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:#12493a;border:1px solid var(--line);color:var(--ink);padding:12px 18px;border-radius:14px;font-size:14px;opacity:0;pointer-events:none;transition:.2s;z-index:200;max-width:90vw;text-align:center}.toast.show{opacity:1;transform:translate(-50%,0)}
 .dropzone{position:absolute;inset:0;border-radius:24px;background:#06231bee;border:2px dashed var(--g1);display:none;place-items:center;font-size:22px;font-weight:700;color:var(--g1);z-index:5}.dropzone.on{display:grid}
+.rb.emo{width:44px;height:44px;font-size:27px;color:#7fb7a2}.composer{gap:8px}
+@media(max-width:400px){.rb{width:48px;height:48px;font-size:23px}.rb.emo{width:40px;height:40px;font-size:25px}.composer{gap:6px}.pill{padding:0 14px}}
 </style>
 </head>
 <body>
@@ -145,8 +147,9 @@ svg{width:1em;height:1em;display:block}
       </div>
       <div class="pop emoji" id="emojiPanel" hidden></div>
       <button class="rb attach" type="button" id="attachBtn" aria-label="Attach photo or file" data-ic="image"></button>
+      <button class="rb emo" type="button" id="emojiBtn" aria-label="Emoji" data-ic="smile"></button>
       <div class="pill">
-        <button type="button" class="inpill" id="emojiBtn" aria-label="Emoji" data-ic="smile"></button><textarea id="messageInput" rows="1" placeholder="Write a message" aria-label="Write a message"></textarea>
+        <textarea id="messageInput" rows="1" placeholder="Write a message" aria-label="Write a message"></textarea>
         <div class="recbar"><span class="record-dot"></span><span id="recTime">0:00</span><span style="color:var(--mut);font-size:14px">Recording…</span></div>
       </div>
       <button class="rb action" type="button" id="actionBtn" aria-label="Record voice note" data-ic="mic"></button>
@@ -157,7 +160,7 @@ svg{width:1em;height:1em;display:block}
   </section>
 
   <section class="card" id="paneCalls" hidden>
-    <h2 class="ctitle"><span class="cico" data-ic="phone"></span>Family calls</h2>
+    <h2 class="ctitle"><span class="cico" data-ic="phone"></span>Calls</h2>
     <div class="scroll">
       <p class="intro">Tap the phone for a voice call or the camera for a video call. The other person must have the app open to hear it ring.</p>
       <p class="count" id="peopleCount"></p>
