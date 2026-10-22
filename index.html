@@ -17,7 +17,7 @@
     .messages{flex:1;overflow:auto;padding:24px clamp(16px,3vw,38px);background:linear-gradient(#fff,#fff 70%,#fcfbff)}.day{text-align:center;margin:3px 0 24px;color:#a0a6b5;font-size:11px;font-weight:750}.message-row{display:flex;gap:10px;align-items:flex-end;margin:18px 0}.message-row.mine{justify-content:flex-end}.bubble-wrap{max-width:min(76%,440px)}.sender{font-size:11px;color:var(--muted);margin:0 0 6px 3px}.bubble{padding:12px 15px;border-radius:16px 16px 16px 5px;background:#f0f2f8;color:#30394d;line-height:1.5;font-size:14px;overflow-wrap:anywhere;white-space:pre-wrap}.mine .bubble{background:var(--brand);color:white;border-radius:16px 16px 5px 16px}.time{font-size:10px;color:#a0a6b5;margin:6px 4px 0}.mine .time{text-align:right}.attachment{display:flex;align-items:center;gap:10px;border:1px solid #ffffff55;padding:10px;border-radius:12px;margin-top:8px;background:#ffffff18}.attachment .fileicon{font-size:22px}.attachment small{display:block;opacity:.8;font-size:11px}
     .composer-wrap{padding:14px 20px 19px;border-top:1px solid var(--line);background:#fff}.tools{display:flex;gap:7px;margin-bottom:10px}.tool{border:0;background:transparent;color:#8991a4;border-radius:8px;padding:5px 8px;font-size:19px}.tool:hover{background:var(--soft);color:var(--brand)}.composer{display:flex;align-items:flex-end;gap:10px;border:1px solid #e1e4ef;border-radius:16px;padding:8px 9px 8px 15px;box-shadow:0 3px 12px #24314b08}.composer textarea{border:0;outline:0;resize:none;flex:1;min-width:0;max-height:120px;padding:8px 0;color:var(--ink);background:transparent}.send{width:42px;height:42px;border:0;border-radius:12px;color:#fff;background:var(--brand);font-size:18px}.send:hover{background:#5635e8}.hint{font-size:10px;color:#a0a6b5;margin:8px 3px 0}
     .rightbar{border-left:1px solid var(--line);padding:24px 17px;min-width:0}.search{display:flex;gap:8px;align-items:center;background:#f5f6fa;border:1px solid #eef0f6;padding:10px 12px;border-radius:12px}.search input{border:0;outline:0;background:transparent;width:100%;min-width:0;font-size:12px}.right-title{font-size:13px;font-weight:800;margin:25px 3px 13px;display:flex;align-items:center;justify-content:space-between}.text-link{font-size:11px;color:var(--brand);border:0;background:none;font-weight:750}.contact{display:flex;align-items:center;gap:10px;padding:10px 3px;border:0;background:none;width:100%;text-align:left;border-radius:10px}.contact:hover{background:#f8f7ff}.contact-info{min-width:0;flex:1}.contact-info strong,.contact-info small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.contact-info strong{font-size:12px}.contact-info small{font-size:11px;color:var(--muted);margin-top:4px}.status{width:8px;height:8px;background:#cbd0dc;border-radius:50%}.status.on{background:var(--green)}.resource{display:flex;gap:10px;align-items:center;padding:12px 10px;background:#f8f7ff;border-radius:12px;margin:8px 0}.resource .fileicon{font-size:22px}.resource strong{font-size:11px;display:block}.resource small{font-size:10px;color:var(--muted)}.call-card{margin-top:24px;padding:15px;border-radius:16px;background:linear-gradient(145deg,#6d4aff,#8b5cf6);color:#fff}.call-card strong{font-size:13px}.call-card p{font-size:11px;line-height:1.5;color:#e8e0ff}.call-card button{width:100%;border:0;border-radius:10px;background:white;color:#6845ef;padding:10px;font-size:12px;font-weight:800}
-    .mobile-menu{display:none}.empty{text-align:center;color:var(--muted);font-size:13px;padding:25px 5px}.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:#172033;color:#fff;padding:11px 16px;border-radius:12px;font-size:12px;opacity:0;pointer-events:none;transition:.2s;box-shadow:0 8px 25px #0002;z-index:20}.toast.show{opacity:1;transform:translate(-50%,0)}
+    .auth-overlay{position:fixed;inset:0;background:#111827aa;display:grid;place-items:center;padding:18px;z-index:50}.auth-card{width:min(100%,420px);background:#fff;border-radius:22px;padding:26px;box-shadow:0 25px 80px #0003}.auth-card h2{margin:0 0 8px;font-size:24px}.auth-card p{color:var(--muted);font-size:13px;line-height:1.5}.auth-card input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;margin:6px 0 10px}.auth-card button{padding:11px 14px;border:0;border-radius:10px;background:var(--brand);color:white;font-weight:750}.auth-actions{display:flex;gap:8px;flex-wrap:wrap}.auth-actions .secondary{background:#f0edff;color:var(--brand)}.auth-error{color:#b91c1c;font-size:12px;min-height:16px}.mobile-menu{display:none}.empty{text-align:center;color:var(--muted);font-size:13px;padding:25px 5px}.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:#172033;color:#fff;padding:11px 16px;border-radius:12px;font-size:12px;opacity:0;pointer-events:none;transition:.2s;box-shadow:0 8px 25px #0002;z-index:20}.toast.show{opacity:1;transform:translate(-50%,0)}
     @media(max-width:1050px){.app{grid-template-columns:220px minmax(280px,1fr)}.rightbar{display:none}}
     @media(max-width:650px){.app{display:block}.sidebar{display:none}.main{height:100dvh;min-height:520px}.topbar{height:72px;padding:0 14px}.topbar .mobile-menu{display:grid}.messages{padding:18px 13px}.bubble-wrap{max-width:84%}.composer-wrap{padding:10px 12px 13px}.hint{display:none}.topbar h1{font-size:15px}}
   </style>
@@ -35,7 +35,7 @@
     <a class="nav" href="#" data-view="Shared resources"><span class="ico">▤</span> Shared resources</a>
     <a class="nav" href="#" data-view="Saved messages"><span class="ico">☆</span> Saved messages</a>
     <a class="nav" href="#" data-view="Settings"><span class="ico">⚙</span> Settings</a>
-    <div class="profile"><div class="avatar">Y</div><div class="meta"><strong>You (Demo)</strong><small>Local preview</small></div><span>⌄</span></div>
+    <div class="profile"><div class="avatar">Y</div><div class="meta"><strong id="profileName">Signed out</strong><small id="profileStatus">Firebase account</small></div><span>⌄</span></div>
   </aside>
   <main class="main">
     <header class="topbar">
@@ -62,7 +62,7 @@
         <input type="file" id="fileInput" hidden accept="image/*,video/*,.pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx">
       </div>
       <div class="composer"><textarea id="messageInput" rows="1" placeholder="Write a message..." aria-label="Write a message"></textarea><button class="send" type="submit" aria-label="Send message">➤</button></div>
-      <div class="hint">Demo mode · Press Enter to send, Shift + Enter for a new line</div>
+      <div class="hint">Live shared room · Press Enter to send, Shift + Enter for a new line</div>
     </form>
   </main>
   <aside class="rightbar">
@@ -79,6 +79,18 @@
     <div class="resource"><span class="fileicon">🖼️</span><div><strong>Team-photo.jpg</strong><small>Image · Demo resource</small></div></div>
     <div class="call-card"><strong>Stay close, wherever you are.</strong><p>Voice and video call controls are shown here as a preview. Real calls will be added with the backend.</p><button id="startCall">Explore calling</button></div>
   </aside>
+</div>
+<div class="auth-overlay" id="authOverlay">
+  <section class="auth-card" aria-labelledby="authTitle">
+    <div class="brand" style="margin:0 0 18px"><div class="brand-mark">T</div>TEAM-UP</div>
+    <h2 id="authTitle">Welcome to TEAM-UP</h2>
+    <p>Sign in or create an account to join the shared live chat room.</p>
+    <label for="authName">Display name (for new accounts)</label><input id="authName" autocomplete="name" placeholder="Your name">
+    <label for="authEmail">Email address</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
+    <label for="authPassword">Password</label><input id="authPassword" type="password" autocomplete="current-password" placeholder="At least 6 characters" required>
+    <div class="auth-actions"><button id="signInBtn" type="button">Sign in</button><button class="secondary" id="signUpBtn" type="button">Create account</button></div>
+    <p class="auth-error" id="authError" role="alert"></p>
+  </section>
 </div>
 <div class="toast" id="toast" role="status"></div>
 <script>
@@ -123,5 +135,100 @@
   scrollBottom();
 })();
 </script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile, signOut } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc, query, orderBy, limit, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDV1olfRP0Q7QQeswqRDWF-rZAGnGoEYiM",
+    authDomain: "team-up-chat.firebaseapp.com",
+    projectId: "team-up-chat",
+    storageBucket: "team-up-chat.firebasestorage.app",
+    messagingSenderId: "473620469400",
+    appId: "1:473620469400:web:8117b6d554548caa3522ed"
+  };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const overlay = document.getElementById('authOverlay');
+  const authError = document.getElementById('authError');
+  const email = document.getElementById('authEmail');
+  const password = document.getElementById('authPassword');
+  const name = document.getElementById('authName');
+  const messageInput = document.getElementById('messageInput');
+  const messageForm = document.getElementById('messageForm');
+  const messagesBox = document.getElementById('messages');
+  let stopMessages = null;
+  let currentUser = null;
+  let initialMessagesShown = false;
+
+  function showError(error) {
+    const messages = {
+      'auth/email-already-in-use': 'That email already has an account. Please sign in.',
+      'auth/invalid-email': 'Please enter a valid email address.',
+      'auth/weak-password': 'Use a password with at least 6 characters.',
+      'auth/invalid-credential': 'Email or password is incorrect.',
+      'auth/too-many-requests': 'Too many attempts. Please wait and try again.'
+    };
+    authError.textContent = messages[error.code] || error.message || 'Something went wrong. Please try again.';
+  }
+  document.getElementById('signInBtn').addEventListener('click', async () => {
+    authError.textContent = '';
+    try { await signInWithEmailAndPassword(auth, email.value.trim(), password.value); }
+    catch (e) { showError(e); }
+  });
+  document.getElementById('signUpBtn').addEventListener('click', async () => {
+    authError.textContent = '';
+    if (!name.value.trim()) { authError.textContent = 'Enter your display name to create an account.'; return; }
+    try {
+      const credential = await createUserWithEmailAndPassword(auth, email.value.trim(), password.value);
+      await updateProfile(credential.user, { displayName: name.value.trim() });
+    } catch (e) { showError(e); }
+  });
+
+  onAuthStateChanged(auth, user => {
+    currentUser = user;
+    overlay.style.display = user ? 'none' : 'grid';
+    document.getElementById('profileName').textContent = user ? (user.displayName || user.email) : 'Signed out';
+    document.getElementById('profileStatus').textContent = user ? 'Signed in · Live chat' : 'Firebase account';
+    if (stopMessages) { stopMessages(); stopMessages = null; }
+    if (!user) return;
+    messagesBox.innerHTML = '<div class="day">LIVE SHARED ROOM</div>';
+    const messageQuery = query(collection(db, 'rooms', 'general', 'messages'), orderBy('createdAt', 'asc'), limit(100));
+    stopMessages = onSnapshot(messageQuery, snapshot => {
+      messagesBox.innerHTML = '<div class="day">LIVE SHARED ROOM</div>';
+      snapshot.forEach(docSnap => {
+        const m = docSnap.data();
+        const mine = m.uid === user.uid;
+        const row = document.createElement('div'); row.className = 'message-row' + (mine ? ' mine' : '');
+        if (!mine) { const avatar = document.createElement('div'); avatar.className = 'avatar small purple'; avatar.textContent = (m.displayName || 'U').slice(0,1).toUpperCase(); row.appendChild(avatar); }
+        const wrap = document.createElement('div'); wrap.className = 'bubble-wrap';
+        if (!mine) { const sender = document.createElement('div'); sender.className = 'sender'; sender.textContent = m.displayName || 'TEAM-UP user'; wrap.appendChild(sender); }
+        const bubble = document.createElement('div'); bubble.className = 'bubble'; bubble.textContent = m.text || ''; wrap.appendChild(bubble);
+        const time = document.createElement('div'); time.className = 'time'; time.textContent = m.createdAt?.toDate ? m.createdAt.toDate().toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : 'Just now'; wrap.appendChild(time);
+        row.appendChild(wrap); messagesBox.appendChild(row);
+      });
+      messagesBox.scrollTop = messagesBox.scrollHeight;
+    }, error => { console.error(error); document.getElementById('authError').textContent = 'Chat access blocked. Check that Firestore rules were published correctly.'; });
+  });
+
+  // Capture the submit before the demo handler so messages are sent to Firestore, not only shown locally.
+  messageForm.addEventListener('submit', async event => {
+    event.preventDefault(); event.stopImmediatePropagation();
+    if (!currentUser) { overlay.style.display = 'grid'; return; }
+    const text = messageInput.value.trim(); if (!text) return;
+    if (text.length > 2000) { alert('Please keep messages under 2,000 characters.'); return; }
+    try {
+      await addDoc(collection(db, 'rooms', 'general', 'messages'), {
+        text, uid: currentUser.uid, displayName: currentUser.displayName || currentUser.email,
+        createdAt: serverTimestamp()
+      });
+      messageInput.value = ''; messageInput.style.height = 'auto';
+    } catch (e) { console.error(e); alert('Message was not sent. Check Firestore rules and your internet connection.'); }
+  }, true);
+</script>
+
 </body>
 </html>
