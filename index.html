@@ -21,7 +21,7 @@ svg{width:1em;height:1em;display:block}
 .mark{width:32px;height:32px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(180deg,var(--g1),var(--g2));color:#2a1c00;font-weight:900}
 .me{border-radius:50%}
 .seg{display:flex;gap:4px;padding:6px;border-radius:999px;background:rgba(255,255,255,.07);border:1px solid var(--line)}
-.seg button{flex:1;padding:14px 8px;border-radius:999px;font-weight:700;font-size:18px;color:var(--mut);position:relative}
+.seg button{flex:1;padding:14px 8px;border-radius:999px;font-weight:700;font-size:18px;color:var(--mut);position:relative;display:flex;align-items:center;justify-content:center;gap:8px}.seg .ti{display:grid;font-size:20px}
 .seg button.on{background:linear-gradient(180deg,var(--g1),var(--g2));color:#2a1c00;box-shadow:0 4px 14px #0004}
 .seg b{position:absolute;top:6px;right:16px;min-width:20px;height:20px;border-radius:99px;background:#ef4444;color:#fff;font-size:11px;display:grid;place-items:center;padding:0 5px}
 .card{flex:1;min-height:0;display:flex;flex-direction:column;border-radius:24px;border:1px solid var(--line);background:linear-gradient(160deg,var(--card1),var(--card2));padding:20px 20px 16px;position:relative}
@@ -42,7 +42,7 @@ svg{width:1em;height:1em;display:block}
 .bubble{padding:9px 13px 7px;border-radius:18px 18px 18px 5px;background:#0c2f24;border:1px solid var(--line);line-height:1.45;font-size:16px;overflow-wrap:anywhere;white-space:pre-wrap;cursor:pointer}
 .mine .bubble{background:linear-gradient(135deg,#17795c,#0f5e48);border-color:transparent;border-radius:18px 18px 5px 18px}
 .bubble .lnk{color:#8fd8ff}
-.meta{display:flex;justify-content:flex-end;font-size:11px;color:#a9d3c3;margin-top:3px}
+.meta{display:flex;justify-content:flex-end;align-items:center;gap:4px;font-size:11px;color:#a9d3c3;margin-top:3px}.tick{display:grid;font-size:14px;color:#8fe3c3}
 .quote{border-left:3px solid var(--g1);background:#0004;border-radius:8px;padding:5px 9px;margin:0 0 6px;font-size:13px}.quote b{display:block;color:var(--g1);font-size:12px}.quote span{display:block;color:#cfe8dd;max-height:36px;overflow:hidden}
 .reactions{display:flex;flex-wrap:wrap;gap:4px;margin:4px 2px}.chip{background:#0f3d2f;border:1px solid var(--line);border-radius:99px;padding:2px 9px;font-size:13px}.chip.mine{border-color:var(--g1)}
 .actions{display:none;gap:2px;flex-wrap:wrap;margin:6px 0 2px;background:#082219;border:1px solid var(--line);border-radius:16px;padding:5px;width:max-content;max-width:100%}
@@ -68,7 +68,7 @@ svg{width:1em;height:1em;display:block}
 .recbar{display:none;align-items:center;gap:10px;flex:1;font-size:17px}.record-dot{width:11px;height:11px;border-radius:50%;background:#ff4d4f;animation:pulse 1s infinite}@keyframes pulse{50%{opacity:.25}}
 .recording textarea{display:none}.recording .recbar{display:flex}
 .pop{position:absolute;bottom:calc(100% + 10px);left:0;background:#082219;border:1px solid var(--line);border-radius:18px;padding:8px;box-shadow:0 12px 34px #000a;z-index:10;min-width:210px}
-.pop button{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:12px;border-radius:12px;font-size:16px}.pop button:hover{background:#12493a}.pop svg{font-size:22px;color:var(--teal)}
+.pop button{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:12px;border-radius:12px;font-size:16px}.pop button:hover{background:#12493a}.pop .ci{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:none}.pop .ci svg{font-size:22px}.c1{background:linear-gradient(135deg,#8b5cf6,#6366f1)}.c2{background:linear-gradient(135deg,#f43f5e,#ec4899)}.c3{background:linear-gradient(135deg,#3b82f6,#0ea5e9)}.pop.emoji{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;left:0;right:0;min-width:0;padding:8px 6px}.pop.emoji button{width:auto;padding:6px 0;justify-content:center;font-size:24px}.inpill{font-size:25px;color:#7fb7a2;margin-right:8px;flex:none;display:grid}.spacer{flex:1}.tb{width:46px;height:46px;border-radius:50%;border:1.5px solid rgba(47,211,161,.55);color:var(--teal);display:grid;place-items:center;font-size:22px;flex:none}.tb:hover{background:rgba(47,211,161,.12)}.fi{width:46px;height:50px;border-radius:10px;display:grid;place-items:center;font-size:11px;font-weight:900;color:#fff;letter-spacing:.4px;flex:none}.vp{display:flex;align-items:center;gap:10px;min-width:220px}.vpb{width:42px;height:42px;border-radius:50%;background:var(--g1);color:#2a1c00;display:grid;place-items:center;font-size:20px;flex:none}.vpt{flex:1;height:7px;border-radius:7px;background:#0006;cursor:pointer;overflow:hidden}.vpt i{display:block;height:100%;width:0;background:var(--g1)}.vpd{font-size:12px;min-width:34px;text-align:right;color:#d5efe4}.pinfo small.dir{display:flex;align-items:center;gap:6px}.di{display:grid;font-size:15px;color:var(--teal)}.pinfo small.missed .di{color:#ff9d9d}.sheet{background:#04170fE8;z-index:70}.prow{display:flex;align-items:center;gap:14px;width:100%;padding:12px 4px;text-align:left;border-top:1px solid var(--line)}
 /* calls tab */
 .intro{color:#b4d6c8;font-size:18px;line-height:1.5;margin:12px 0 10px}
 .count{color:var(--mut);font-size:16px;margin:0 0 12px}
@@ -122,13 +122,13 @@ svg{width:1em;height:1em;display:block}
     <button class="me" id="meBtn" aria-label="Account menu"></button>
   </header>
   <nav class="seg" id="seg">
-    <button data-tab="messages" class="on">Messages<b id="badge" hidden>0</b></button>
-    <button data-tab="calls">Calls</button>
+    <button data-tab="messages" class="on"><span class="ti" data-ic="chat"></span>Messages<b id="badge" hidden>0</b></button>
+    <button data-tab="calls"><span class="ti" data-ic="phone"></span>Calls</button>
   </nav>
 
   <section class="card" id="paneMessages">
     <div class="dropzone" id="dropzone">Drop files to share</div>
-    <h2 class="ctitle"><span class="cico" data-ic="chat"></span>Team chat</h2>
+    <h2 class="ctitle"><span class="cico" data-ic="chat"></span>Team chat<span class="spacer"></span><button type="button" class="tb" id="quickVoice" aria-label="Start a voice call" data-ic="phone"></button><button type="button" class="tb" id="quickVideo" aria-label="Start a video call" data-ic="video"></button></h2>
     <div class="scroll" id="messages" aria-live="polite">
       <div id="list"></div>
       <p class="empty" id="emptyNote">No messages yet. Say hello to the family.</p>
@@ -139,13 +139,14 @@ svg{width:1em;height:1em;display:block}
     </div>
     <form class="composer" id="messageForm" autocomplete="off">
       <div class="pop" id="attachMenu" hidden>
-        <button type="button" data-pick="media"><span data-ic="image"></span>Photo or video</button>
-        <button type="button" data-pick="camera"><span data-ic="camera"></span>Camera</button>
-        <button type="button" data-pick="doc"><span data-ic="file"></span>Document</button>
+        <button type="button" data-pick="media"><span class="ci c1" data-ic="image"></span>Photo or video</button>
+        <button type="button" data-pick="camera"><span class="ci c2" data-ic="camera"></span>Camera</button>
+        <button type="button" data-pick="doc"><span class="ci c3" data-ic="file"></span>Document</button>
       </div>
+      <div class="pop emoji" id="emojiPanel" hidden></div>
       <button class="rb attach" type="button" id="attachBtn" aria-label="Attach photo or file" data-ic="image"></button>
       <div class="pill">
-        <textarea id="messageInput" rows="1" placeholder="Write a message" aria-label="Write a message"></textarea>
+        <button type="button" class="inpill" id="emojiBtn" aria-label="Emoji" data-ic="smile"></button><textarea id="messageInput" rows="1" placeholder="Write a message" aria-label="Write a message"></textarea>
         <div class="recbar"><span class="record-dot"></span><span id="recTime">0:00</span><span style="color:var(--mut);font-size:14px">Recording…</span></div>
       </div>
       <button class="rb action" type="button" id="actionBtn" aria-label="Record voice note" data-ic="mic"></button>
@@ -210,6 +211,8 @@ svg{width:1em;height:1em;display:block}
   </div>
 </div>
 
+<div class="overlay sheet" id="picker" hidden><section class="acard"><h2 id="pickerTitle">Start a call</h2><div id="pickerList"></div><button class="btn sec" id="pickerClose" type="button" style="width:100%;margin-top:12px">Cancel</button></section></div>
+
 <div class="overlay lightbox" id="lightbox" hidden><img id="lightboxImg" alt=""></div>
 <div class="toast" id="toast" role="status"></div>
 
@@ -266,7 +269,15 @@ const P = {
   reply: '<polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/>',
   copy: '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
   logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
-  bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>'
+  bell: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  play: '<polygon points="7 4 20 12 7 20 7 4" fill="currentColor"/>',
+  pause: '<rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  check: '<polyline points="20 6 9 17 4 12"/>',
+  smile: '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
+  phoneIn: '<polyline points="16 2 16 8 22 8"/><line x1="23" y1="1" x2="16" y2="8"/><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  phoneOut: '<polyline points="23 7 23 1 17 1"/><line x1="16" y1="8" x2="23" y2="1"/><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  phoneMissed: '<line x1="23" y1="1" x2="17" y2="7"/><line x1="17" y1="1" x2="23" y2="7"/><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>'
 };
 const ic = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
 const paintIcons = root => root.querySelectorAll('[data-ic]').forEach(n => { n.innerHTML = ic(n.dataset.ic); });
@@ -424,7 +435,7 @@ function startMessages() {
     firstSnap = false;
   }, err => { console.error(err); toast('Chat blocked. Publish the Firestore rules from firestore.rules.'); });
 }
-const previewOf = m => m.type === 'voice' ? '🎙 Voice note' : m.type === 'file' ? '📎 ' + (m.fileName || 'File') : (m.text || '');
+const previewOf = m => m.type === 'voice' ? 'Voice note' : m.type === 'file' ? (m.fileName || 'File') : (m.text || '');
 
 function buildRow(id, m, pending) {
   const mine = m.uid === me.uid;
@@ -436,21 +447,20 @@ function buildRow(id, m, pending) {
   if (m.replyTo) { const q = el('div', 'quote'); q.append(el('b', null, m.replyTo.name || ''), el('span', null, m.replyTo.text || '')); b.append(q); }
   const safe = safeUrl(m.fileUrl);
   if (m.type === 'voice' && safe) {
-    const v = el('div', 'voice'); const a = document.createElement('audio'); a.controls = true; a.preload = 'metadata'; a.src = m.fileUrl; v.append(a); b.append(v);
-    if (m.duration) b.append(el('div', 'meta', 'Voice note · ' + fmtDur(m.duration)));
+    b.append(voicePlayer(m.fileUrl, m.duration));
   } else if (m.type === 'file' && safe) {
     const mt = m.mimeType || '';
     if (mt.startsWith('image/')) { const i = document.createElement('img'); i.className = 'media-img'; i.loading = 'lazy'; i.src = m.fileUrl; i.alt = m.fileName || 'Photo'; i.onclick = ev => { ev.stopPropagation(); $('lightboxImg').src = m.fileUrl; $('lightbox').hidden = false; }; b.append(i); }
     else if (mt.startsWith('video/')) { const v = document.createElement('video'); v.className = 'media-video'; v.controls = true; v.preload = 'metadata'; v.playsInline = true; v.src = m.fileUrl; b.append(v); }
     else {
-      const a = el('a', 'file-card'); a.href = m.fileUrl; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.download = m.fileName || '';
-      const i = el('span', 'ico'); i.innerHTML = ic('file'); i.firstChild.style.cssText = 'width:26px;height:26px'; const t = el('span');
+      const k = fileKind(m); const a = el('a', 'file-card'); a.href = m.fileUrl; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.download = m.fileName || '';
+      const i = el('span', 'fi', k.label); i.style.background = k.color; const t = el('span');
       t.append(el('strong', null, m.fileName || 'Shared file'), el('small', null, (m.fileSize ? fmtSize(m.fileSize) + ' · ' : '') + 'Tap to open')); a.append(i, t); b.append(a);
     }
   } else { const t = el('div', 'text'); linkify(t, m.text || ''); b.append(t); }
   const ts = m.createdAt?.toDate ? fmtStamp(m.createdAt) : '';
-  b.append(el('div', 'meta', (ts || 'Sending…') + (mine ? (pending ? ' 🕓' : ' ✓') : '')));
-  b.onclick = ev => { if (ev.target.closest('a,audio,video,button,img')) return; selectRow(row); };
+  const meta = el('div', 'meta'); meta.append(document.createTextNode(ts || 'Sending…')); if (mine) { const tk = el('span', 'tick'); tk.innerHTML = ic(pending ? 'clock' : 'check'); meta.append(tk); } b.append(meta);
+  b.onclick = ev => { if (ev.target.closest('a,audio,video,button,img,.vpt')) return; selectRow(row); };
   wrap.append(b);
   const rx = m.reactions || {}; const chips = el('div', 'reactions');
   Object.entries(rx).forEach(([emo, uids]) => { if (!uids?.length) return; const c = el('button', 'chip' + (uids.includes(me.uid) ? ' mine' : ''), `${emo} ${uids.length}`); c.type = 'button'; c.onclick = () => react(id, emo); chips.append(c); });
@@ -472,6 +482,7 @@ document.addEventListener('click', e => {
   if (selectedRow && !e.target.closest('.row')) selectRow(null);
   if (!e.target.closest('#meMenu,#meBtn')) meMenu.hidden = true;
   if (!e.target.closest('#attachMenu,#attachBtn')) $('attachMenu').hidden = true;
+  if (!e.target.closest('#emojiPanel,#emojiBtn')) $('emojiPanel').hidden = true;
 });
 $('lightbox').addEventListener('click', () => { $('lightbox').hidden = true; });
 
@@ -501,7 +512,7 @@ form.addEventListener('submit', async e => {
   try { await sendMessage(data); } catch (er) { console.error(er); input.value = text; syncComposer(); toast('Message not sent. Check your connection and Firestore rules.'); }
 });
 $('actionBtn').addEventListener('click', () => { if (rec) return stopRec(true); if (input.value.trim()) return form.requestSubmit(); startRec(); });
-$('attachBtn').addEventListener('click', e => { e.stopPropagation(); if (rec) return stopRec(false); $('attachMenu').hidden = !$('attachMenu').hidden; });
+$('attachBtn').addEventListener('click', e => { e.stopPropagation(); if (rec) return stopRec(false); $('emojiPanel').hidden = true; $('attachMenu').hidden = !$('attachMenu').hidden; });
 $('attachMenu').addEventListener('click', e => { const b = e.target.closest('button[data-pick]'); if (!b) return; $('attachMenu').hidden = true; $({ media: 'fileMedia', camera: 'fileCamera', doc: 'fileDoc' }[b.dataset.pick]).click(); });
 ['fileMedia', 'fileCamera', 'fileDoc'].forEach(id => $(id).addEventListener('change', e => { [...e.target.files].forEach(f => queueUpload(f)); e.target.value = ''; }));
 const shell = $('paneMessages'); let dragDepth = 0;
@@ -609,9 +620,9 @@ function renderPeople() {
     const out = c.callerId === me.uid; const otherId = out ? c.calleeId : c.callerId; const name = out ? c.calleeName : c.callerName;
     const u = users.get(otherId) || { id: otherId, displayName: name };
     const missed = !out && (c.status === 'missed' || c.status === 'declined');
-    const detail = `${out ? '↗' : '↙'} ${c.type === 'video' ? 'Video' : 'Voice'} · ${fmtStamp(c.createdAt)}${c.duration ? ' · ' + fmtDur(c.duration) : c.status === 'missed' ? (out ? ' · No answer' : ' · Missed') : c.status === 'declined' ? ' · Declined' : ''}`;
+    const detail = `${c.type === 'video' ? 'Video' : 'Voice'} · ${fmtStamp(c.createdAt)}${c.duration ? ' · ' + fmtDur(c.duration) : c.status === 'missed' ? (out ? ' · No answer' : ' · Missed') : c.status === 'declined' ? ' · Declined' : ''}`;
     const row = el('div', 'person'); const info = el('div', 'pinfo');
-    info.append(el('strong', null, name || 'User'), el('small', missed ? 'missed' : '', detail));
+    const sm = el('small', 'dir' + (missed ? ' missed' : '')); const di = el('span', 'di'); di.innerHTML = ic(missed ? 'phoneMissed' : out ? 'phoneOut' : 'phoneIn'); sm.append(di, document.createTextNode(detail)); info.append(el('strong', null, name || 'User'), sm);
     const b = el('button', 'cb sm'); b.type = 'button'; b.innerHTML = ic(c.type === 'video' ? 'video' : 'phone'); b.onclick = () => startCall(c.type, u);
     row.append(avatar(u, ''), info, b); rbox.append(row);
   });
@@ -752,6 +763,55 @@ function stopShare() {
   call.screen.getTracks().forEach(t => t.stop()); call.screen = null; localV.srcObject = call.stream; $('screenBtn').classList.remove('off');
 }
 window.addEventListener('beforeunload', () => { if (call?.ref) updateDoc(call.ref, { status: 'ended' }).catch(() => {}); });
+
+/* ---------- file type badges, voice player, emoji, call picker ---------- */
+function fileKind(m) {
+  const n = (m.fileName || '').toLowerCase(), t = m.mimeType || '';
+  if (t === 'application/pdf' || n.endsWith('.pdf')) return { label: 'PDF', color: '#e5484d' };
+  if (/\.docx?$/.test(n) || t.includes('word')) return { label: 'DOC', color: '#2f6fed' };
+  if (/\.(xlsx?|csv)$/.test(n) || t.includes('sheet') || t.includes('excel')) return { label: 'XLS', color: '#1f9d55' };
+  if (/\.pptx?$/.test(n) || t.includes('presentation') || t.includes('powerpoint')) return { label: 'PPT', color: '#e8772e' };
+  if (/\.(zip|rar|7z)$/.test(n) || t.includes('zip')) return { label: 'ZIP', color: '#d4a017' };
+  if (t.startsWith('audio/')) return { label: 'AUDIO', color: '#8b5cf6' };
+  if (n.endsWith('.txt') || t === 'text/plain') return { label: 'TXT', color: '#64748b' };
+  return { label: 'FILE', color: '#0e8f78' };
+}
+let playingAudio = null;
+function voicePlayer(src, dur) {
+  const w = el('div', 'vp'), btn = el('button', 'vpb'), track = el('div', 'vpt'), fill = el('i'), time = el('span', 'vpd', fmtDur(dur || 0));
+  btn.type = 'button'; btn.setAttribute('aria-label', 'Play voice note'); btn.innerHTML = ic('play'); track.append(fill);
+  const a = new Audio(); a.preload = 'metadata'; a.src = src;
+  const total = () => (isFinite(a.duration) && a.duration > 0) ? a.duration : (dur || 0);
+  btn.onclick = () => { if (a.paused) { if (playingAudio && playingAudio !== a) playingAudio.pause(); playingAudio = a; a.play().catch(() => toast('Cannot play this voice note')); } else a.pause(); };
+  a.onplay = () => { btn.innerHTML = ic('pause'); };
+  a.onpause = () => { btn.innerHTML = ic('play'); };
+  a.onended = () => { btn.innerHTML = ic('play'); fill.style.width = '0'; time.textContent = fmtDur(total()); };
+  a.ontimeupdate = () => { const d = total(); if (d) fill.style.width = Math.min(100, a.currentTime / d * 100) + '%'; time.textContent = fmtDur(a.currentTime); };
+  track.onclick = ev => { const r = track.getBoundingClientRect(), d = total(); if (d) a.currentTime = Math.max(0, Math.min(d, (ev.clientX - r.left) / r.width * d)); };
+  w.append(btn, track, time); return w;
+}
+const EMOJIS = '😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 😉 😍 🥰 😘 😋 😎 🤩 🥳 😏 😌 😴 🤔 🫡 😮 😢 😭 😡 🥺 😱 🤗 🙄 👍 👎 👏 🙌 🙏 💪 👋 ✌️ 🤝 👀 ❤️ 💔 🔥 ✨ 🎉 💯 ✅ ❌ 🚀 📚 💡 🎵 ☕ 🍕 🌍 🌞 🌙'.split(' ');
+EMOJIS.forEach(em => { const b = el('button', null, em); b.type = 'button'; b.onclick = () => { const st = input.selectionStart ?? input.value.length; input.setRangeText(em, st, input.selectionEnd ?? st, 'end'); input.dispatchEvent(new Event('input')); input.focus(); }; $('emojiPanel').append(b); });
+$('emojiBtn').addEventListener('click', e => { e.stopPropagation(); $('attachMenu').hidden = true; $('emojiPanel').hidden = !$('emojiPanel').hidden; });
+
+function openCallPicker(type) {
+  if (!me) return;
+  $('pickerTitle').textContent = type === 'video' ? 'Start a video call' : 'Start a voice call';
+  const box = $('pickerList'); box.innerHTML = '';
+  const others = [...users.values()].filter(u => u.id !== me.uid).sort((a, b) => (isOnline(b) - isOnline(a)) || (a.displayName || '').localeCompare(b.displayName || ''));
+  if (!others.length) box.append(el('p', 'empty', 'No one else has joined yet. Share the link so your family can sign up.'));
+  others.forEach(u => {
+    const b = el('button', 'prow'); b.type = 'button'; const info = el('span', 'pinfo');
+    info.append(el('strong', null, u.displayName || u.email || 'User'), el('small', null, statusText(u)));
+    const go = el('span', 'cb sm'); go.innerHTML = ic(type === 'video' ? 'video' : 'phone');
+    b.append(avatar(u, ''), info, go); b.onclick = () => { $('picker').hidden = true; startCall(type, u); }; box.append(b);
+  });
+  $('picker').hidden = false;
+}
+$('quickVoice').addEventListener('click', () => openCallPicker('audio'));
+$('quickVideo').addEventListener('click', () => openCallPicker('video'));
+$('pickerClose').addEventListener('click', () => { $('picker').hidden = true; });
+$('picker').addEventListener('click', e => { if (e.target === $('picker')) $('picker').hidden = true; });
 syncComposer();
 </script>
 </body>
