@@ -591,7 +591,7 @@ function linkify(node, text) {
   }
   if (last < text.length) node.append(text.slice(last));
 }
-const SAFE_URL = /^(https:\/\/|data:(image\/(png|jpe?g|webp|gif)|audio\/[\w.+-]+|video\/[\w.+-]+|application\/(pdf|zip|msword|octet-stream|vnd[\w.+-]+)|text\/plain)[;,])/i;
+const SAFE_URL = /^(https:\/\/|blob:|data:(image\/(png|jpe?g|webp|gif)|audio\/[\w.+-]+|video\/[\w.+-]+|application\/(pdf|zip|msword|octet-stream|vnd[\w.+-]+)|text\/plain)[;,])/i;
 const safeUrl = u => typeof u === 'string' && SAFE_URL.test(u);
 const dmId = (a, b) => [a, b].sort().join('_');
 const colFor = id => id === 'general' ? ROOM : collection(db, 'chats', id, 'messages');
@@ -888,8 +888,10 @@ function newGroupSheet() {
     btn.onclick = async () => {
       btn.disabled = true; const nm = name.value.trim(), members = [me.uid, ...sel];
       try {
-        const ref = await addDoc(collection(db, 'chats'), { type: 'group', name: nm, members, createdBy: me.uid, createdAt: serverTimestamp(), ...(prefs.dispDefault ? { disappear: prefs.dispDefault } : {}), lastText: 'Group created', lastAt: serverTimestamp(), lastUid: me.uid, lastName: myName() });
-        chats.set(ref.id, { id: ref.id, type: 'group', name: nm, members, createdBy: me.uid, lastText: 'Group created', lastUid: me.uid, lastName: myName() });
+        let gk = null; try { gk = await newGroupKey(members); } catch (e) { console.warn('group key', e); }
+        const ref = await addDoc(collection(db, 'chats'), { type: 'group', name: nm, members, createdBy: me.uid, createdAt: serverTimestamp(), ...(gk ? { gk } : {}), ...(prefs.dispDefault ? { disappear: prefs.dispDefault } : {}), lastText: 'Group created', lastAt: serverTimestamp(), lastUid: me.uid, lastName: myName() });
+        chats.set(ref.id, { id: ref.id, type: 'group', name: nm, members, createdBy: me.uid, ...(gk ? { gk } : {}), lastText: 'Group created', lastUid: me.uid, lastName: myName() });
+        if (!gk) toast('This group is not encrypted because some members have not updated the app yet.');
         closeSheet(); setTab('chats'); openChat(ref.id);
       } catch (e) { console.error(e); btn.disabled = false; toast('Could not create the group. Publish the new Firestore rules.'); }
     };
@@ -967,7 +969,7 @@ function renderChatHeader() {
   $('chatStatus').textContent = s; refreshTicks();
   const bp = c.type === 'dm' && blocked.has(otherOf(c));
   $('voiceCall').hidden = $('videoCall').hidden = c.type !== 'dm' || bp; applyBlockUI(c);
-  const en = $('encNote'); if (c.type === 'dm') { const on = E2E.ready && !!users.get(otherOf(c))?.pub; en.hidden = false; en.innerHTML = ic('lock') + '<span>' + (on ? 'Messages are end-to-end encrypted. Tap to verify.' : 'Not end-to-end encrypted yet: waiting for ' + chatTitle(c).split(' ')[0] + ' to update the app.') + '</span>'; en.onclick = on ? () => verifySheet(c) : null; } else en.hidden = true;
+  const en = $('encNote'); if (c.type === 'dm') { const on = E2E.ready && !!users.get(otherOf(c))?.pub; en.hidden = false; en.innerHTML = ic('lock') + '<span>' + (on ? 'Messages are end-to-end encrypted. Tap to verify.' : 'Not end-to-end encrypted yet: waiting for ' + chatTitle(c).split(' ')[0] + ' to update the app.') + '</span>'; en.onclick = on ? () => verifySheet(c) : null; } else if (c.type === 'group') { en.hidden = false; en.innerHTML = ic('lock') + '<span>' + (c.gk ? 'Messages in this group are end-to-end encrypted.' : 'This group is not end-to-end encrypted.') + '</span>'; en.onclick = null; } else en.hidden = true;
   const db_ = $('dispBar'); db_.hidden = !c.disappear; if (c.disappear) db_.innerHTML = ic('clock') + '<span>Disappearing messages are on: ' + dispName(c.disappear) + '</span>';
 }
 function applyBlockUI(c = curChat()) {
@@ -1011,7 +1013,14 @@ function clearLocal() {
 }
 async function leaveChat() {
   const c = curChat(); if (!c || !confirm(`Leave “${c.name}”?`)) return;
-  try { await updateDoc(doc(db, 'chats', c.id), { members: arrayRemove(me.uid) }); chats.delete(c.id); toast('You left ' + c.name); goBack(); renderChats(); } catch { toast('Could not leave'); }
+  try {
+    const upd = { members: arrayRemove(me.uid) };
+    if (c.type === 'group' && c.gk && E2E.ready) { // give the remaining members a fresh key the person who leaves does not have
+      const rest = (c.members || []).filter(x => x !== me.uid), n = (c.gk.cur || 1) + 1;
+      if (rest.length) { const w = await makeWraps(crypto.getRandomValues(new Uint8Array(32)), rest); if (w) { upd['gk.cur'] = n; upd['gk.k.' + n] = w; } }
+    }
+    await updateDoc(doc(db, 'chats', c.id), upd); chats.delete(c.id); toast('You left ' + c.name); goBack(); renderChats();
+  } catch (e) { console.error(e); toast('Could not leave'); }
 }
 function chatInfo() {
   const c = curChat(); if (!c) return;
@@ -1051,8 +1060,9 @@ async function handleMsgs(id, snap) {
     const mid = ch.doc.id;
     if (ch.type === 'removed') { rows.get(mid)?.remove(); rows.delete(mid); msgCache.delete(mid); continue; }
     if (hiddenIds.has(mid)) { rows.get(mid)?.remove(); rows.delete(mid); continue; }
-    let m = ch.doc.data({ serverTimestamps: 'estimate' }); if (m.type === 'enc') m = await openMsg(m);
+    let m = ch.doc.data({ serverTimestamps: 'estimate' }); if (m.type === 'enc') m = await openMsg(m, id);
     if (!active || active.id !== id) return;
+    if (m.cipher && m.fileUrl) m = resolveFile(mid, m);
     msgCache.set(mid, m);
     if (m.expiresAt && m.expiresAt <= Date.now()) { expireMsg(mid, m); continue; }
     const row = buildRow(mid, m, ch.doc.metadata.hasPendingWrites), old = rows.get(mid);
@@ -1087,7 +1097,8 @@ function buildRow(id, m, pending) {
       const i = el('span', 'fi', k.label); i.style.background = k.color; const t = el('span');
       t.append(el('strong', null, m.fileName || 'Shared file'), el('small', null, (m.fileSize ? fmtSize(m.fileSize) + ' · ' : '') + 'Tap to open')); a.append(i, t); b.append(a);
     }
-  } else { const t = el('div', 'text'); linkify(t, m.text || ''); b.append(t); }
+  } else if (m.pendingFile || m.fileFailed) { b.append(el('div', 'text', m.fileFailed ? '🔒 This file could not be opened.' : '🔒 Decrypting file…')); }
+  else { const t = el('div', 'text'); linkify(t, m.text || ''); b.append(t); }
   const ts = m.createdAt?.toDate ? fmtStamp(m.createdAt) : '';
   const meta = el('div', 'meta'); meta.append(document.createTextNode(ts || 'Sending…')); if (mine) { const tk = el('span', 'tick'); tk.innerHTML = ic(pending ? 'clock' : 'check'); tk.dataset.p = pending ? '1' : ''; tk.dataset.i = pending ? 'clock' : 'check'; meta.append(tk); } b.append(meta);
   b.onclick = ev => { if (ev.target.closest('a,audio,video,button,img,.vpt')) return; selectRow(row); };
@@ -1159,6 +1170,9 @@ async function sendTo(chatId, data) {
   if (dc?.type === 'dm') {
     if (E2E.needRestore || E2E.stale) throw Object.assign(new Error('locked'), { code: 'e2e-locked' });
     const sealed = await sealMsg(dc, data); if (sealed) { body = { type: 'enc', ...sealed }; preview = '🔒 Message'; }
+  } else if (dc?.type === 'group' && dc.gk) {
+    if (E2E.needRestore || E2E.stale || !E2E.ready) throw Object.assign(new Error('locked'), { code: 'e2e-locked' });
+    const sealed = await sealGroup(dc, data); if (sealed) { body = { type: 'enc', ...sealed }; preview = '🔒 Message'; }
   }
   await addDoc(colFor(chatId), { ...body, ...base });
   if (chatId !== 'general') updateDoc(doc(db, 'chats', chatId), { lastText: preview, lastAt: serverTimestamp(), lastUid: me.uid, lastName: myName() }).catch(() => {});
@@ -1209,17 +1223,45 @@ function uploadCloud(file, onProgress) {
     x.onerror = () => rej(new Error('Network error')); x.send(fd);
   });
 }
-async function prepareFile(file, { prog = () => {}, maxInline = INLINE_MAX, maxDim = 1280 } = {}) {
+const MAX_ENC = 25 * 1024 * 1024; // encrypted files are processed in memory, so keep them smaller
+function chatEncrypted(chatId) { const c = chats.get(chatId); if (!c || !E2E.ready) return false; return c.type === 'dm' ? !!users.get(otherOf(c))?.pub : c.type === 'group' ? !!c.gk : false; }
+async function prepareFile(file, { prog = () => {}, maxInline = INLINE_MAX, maxDim = 1280, encrypt = false } = {}) {
   const cloud = useCloud();
-  if (cloud && file.size > MAX_CLOUD) throw Object.assign(new Error('too big'), { code: 'cloud' });
-  let sent = file, url;
-  if (cloud) url = await uploadCloud(file, prog);
+  if (cloud && file.size > (encrypt ? MAX_ENC : MAX_CLOUD)) throw Object.assign(new Error('too big'), { code: encrypt ? 'enc' : 'cloud' });
+  let sent = file, url, cipher;
+  if (cloud && encrypt) {
+    // Encrypt on the phone first, so the cloud only ever stores unreadable bytes. The key travels inside the encrypted message.
+    const raw = crypto.getRandomValues(new Uint8Array(32)), iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt']);
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, await file.arrayBuffer());
+    url = await uploadCloud(new File([ct], 'enc.bin', { type: 'application/octet-stream' }), prog); cipher = { k: b64(raw), iv: b64(iv) };
+  } else if (cloud) url = await uploadCloud(file, prog);
   else {
     if (file.type.startsWith('image/')) sent = await shrinkImage(file, maxDim, maxInline * .9);
     if (sent.size > maxInline) throw Object.assign(new Error('too big'), { code: 'inline' });
     prog(50); url = await readAsDataURL(sent); prog(100);
   }
-  return { url, sent };
+  return { url, sent, cipher };
+}
+// Receiving side: download the encrypted file and decrypt it on this phone.
+const blobCache = new Map(), blobBusy = new Set();
+function resolveFile(mid, m) {
+  const got = blobCache.get(mid); if (got) return got === 'failed' ? { ...m, fileUrl: '', fileFailed: true, pendingFile: false } : { ...m, fileUrl: got, pendingFile: false };
+  if (!blobBusy.has(mid)) {
+    blobBusy.add(mid);
+    (async () => {
+      try {
+        const r = await fetch(m.fileUrl); if (!r.ok) throw new Error('http'); const buf = await r.arrayBuffer();
+        const key = await crypto.subtle.importKey('raw', unb64(m.cipher.k), { name: 'AES-GCM' }, false, ['decrypt']);
+        const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(m.cipher.iv) }, key, buf);
+        blobCache.set(mid, URL.createObjectURL(new Blob([pt], { type: m.mimeType || 'application/octet-stream' })));
+      } catch (e) { console.warn('file decrypt', String(e && e.message || e)); blobCache.set(mid, 'failed'); }
+      blobBusy.delete(mid);
+      const cur = msgCache.get(mid);
+      if (cur && rows.has(mid)) { const nm = resolveFile(mid, { ...cur, cipher: cur.cipher }); msgCache.set(mid, nm); const row = buildRow(mid, nm, false); rows.get(mid).replaceWith(row); rows.set(mid, row); refreshTicks(); }
+    })();
+  }
+  return { ...m, fileUrl: '', pendingFile: true };
 }
 let uploadChain = Promise.resolve();
 function queueUpload(file, kind = 'file', extra = {}) {
@@ -1231,13 +1273,13 @@ async function uploadAndShare(file, kind, extra, chatId, reply) {
   $('uploadBar').hidden = false; $('uploadLabel').textContent = 'Sending ' + label + '… 0%'; $('uploadFill').style.width = '0%';
   const prog = p => { $('uploadLabel').textContent = `Sending ${label}… ${p}%`; $('uploadFill').style.width = p + '%'; };
   try {
-    const { url, sent } = await prepareFile(file, { prog });
-    const data = { type: kind, fileName: (sent.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 120) || 'shared-file', fileUrl: url, mimeType: sent.type || 'application/octet-stream', fileSize: sent.size, ...extra };
+    const { url, sent, cipher } = await prepareFile(file, { prog, encrypt: chatEncrypted(chatId) });
+    const data = { type: kind, fileName: (sent.name || 'file').replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 120) || 'shared-file', fileUrl: url, mimeType: sent.type || 'application/octet-stream', fileSize: sent.size, ...(cipher ? { cipher } : {}), ...extra };
     if (reply) data.replyTo = { id: reply.id, name: reply.name, text: reply.text };
     await sendTo(chatId, data);
   } catch (e) {
     console.error(e);
-    alert(e.code === 'inline' ? `"${label}" is too big for free built-in sharing (max about 600 KB; photos shrink automatically). For videos and larger files, add free Cloudinary keys — see the note near the top of the script.` : e.code === 'cloud' ? `"${label}" is larger than 100 MB.` : 'Sending failed: ' + (e.message || e));
+    alert(e.code === 'inline' ? `"${label}" is too big for free built-in sharing (max about 600 KB; photos shrink automatically). For videos and larger files, add free Cloudinary keys — see the note near the top of the script.` : e.code === 'cloud' ? `"${label}" is larger than 100 MB.` : e.code === 'enc' ? `"${label}" is larger than 25 MB, which is the limit for private encrypted files.` : 'Sending failed: ' + (e.message || e));
   } finally { $('uploadBar').hidden = true; }
 }
 
@@ -1428,14 +1470,37 @@ async function sealMsg(chat, data) {
   const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, TE.encode(JSON.stringify(data))));
   return { enc: { iv: toStore(iv), ct: toStore(ct) }, spub: E2E.pubStr, rpub: theirPub };
 }
-async function openMsg(m) {
+async function openMsg(m, chatId) {
   const base = { uid: m.uid, displayName: m.displayName, createdAt: m.createdAt, expiresAt: m.expiresAt, reactions: m.reactions };
   try {
     if (!E2E.ready) throw new Error('locked');
-    const key = await sharedKey(m.uid === me.uid ? m.rpub : m.spub);
+    const key = m.gv ? await groupKeyFor(chats.get(chatId), m.gv) : await sharedKey(m.uid === me.uid ? m.rpub : m.spub);
     const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: fromStore(m.enc.iv) }, key, fromStore(m.enc.ct));
     return { ...JSON.parse(TD.decode(pt)), ...base, e2e: true };
   } catch { return { type: 'text', text: '🔒 This message cannot be read on this phone.', ...base, locked: true }; }
+}
+/* group keys: one random AES key per group, wrapped separately for every member with their public key */
+const gcache = new Map();
+async function makeWraps(raw, uids) {
+  const w = {};
+  for (const u of uids) {
+    const pub = u === me.uid ? E2E.pubStr : users.get(u)?.pub; if (!pub) return null;
+    const key = await sharedKey(pub), iv = crypto.getRandomValues(new Uint8Array(12));
+    w[u] = { f: E2E.pubStr, iv: b64(iv), ct: b64(new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, raw))) };
+  }
+  return w;
+}
+async function newGroupKey(uids) { if (!E2E.ready) return null; const w = await makeWraps(crypto.getRandomValues(new Uint8Array(32)), uids); return w ? { cur: 1, k: { '1': w } } : null; }
+async function groupKeyFor(c, v) {
+  const id = c.id + ':' + v; if (gcache.has(id)) return gcache.get(id);
+  const w = c.gk?.k?.[String(v)]?.[me.uid]; if (!w) throw new Error('nokey');
+  const raw = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(w.iv) }, await sharedKey(w.f), unb64(w.ct));
+  const k = await crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']); gcache.set(id, k); return k;
+}
+async function sealGroup(c, data) {
+  if (!c.gk) return null; const v = c.gk.cur, key = await groupKeyFor(c, v), iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, TE.encode(JSON.stringify(data))));
+  return { enc: { iv: toStore(iv), ct: toStore(ct) }, gv: v };
 }
 function refreshChatMsgs() { if (active) { stopMsgs(); resetMsgUI(); startMsgs(); } }
 /* backup with a passphrase */
@@ -1538,7 +1603,7 @@ function legalPage(kind) {
   const privacy = [
     ['What we collect', 'Your name, email address, profile photo, the messages, files, voice notes and status updates you send, when you were last online, your blocked list, and the devices you are signed in on.'],
     ['Where it is stored', 'On Google Firebase servers. Everyone who uses Dxel Chat shares this one service. Settings such as theme, language and app lock stay on your phone.'],
-    ['Who can see it', 'Only the people in a chat can read it through the app. One-to-one chats are end-to-end encrypted, so the person who runs this app’s Firebase project cannot read them. Groups, communities and Team chat are not encrypted yet and can be read by that person. Names, photos and who-talks-to-whom stay visible to the server. Your name and photo are visible to other users unless you turn on “Hide me from the People list”.'],
+    ['Who can see it', 'Only the people in a chat can read it through the app. One-to-one chats and new groups are end-to-end encrypted, so the person who runs this app’s Firebase project cannot read them. Communities, Team chat and older groups are not encrypted and can be read by that person. Names, photos and who-talks-to-whom stay visible to the server. Your name and photo are visible to other users unless you turn on “Hide me from the People list”.'],
     ['Calls', 'Voice and video go directly between phones when possible, or through a relay server when the network requires it. We do not record calls.'],
     ['Your choices', 'Edit your profile, hide your last seen, block or report people, set disappearing messages, export your chats, or delete your account in Settings.'],
     ['Contact', 'Questions or removal requests: ' + OWNER_CONTACT + '.']
@@ -1671,8 +1736,8 @@ function privacyPage() {
     ));
     b.append(group(navRow('lock', 'Encryption backup', E2E.ready ? (E2E.hasBackup ? 'Key is backed up' : 'Not backed up yet') : (E2E.needRestore ? 'Locked on this phone' : 'Not active'), E2E.needRestore ? restorePage : backupPage)));
     b.append(el('div', 'sub', 'How privacy works here'));
-    b.append(para('One-to-one chats are end-to-end encrypted: only you and the other person can read them, and the server stores unreadable data. Check the security code in a chat to be sure. Blocking stops someone from messaging or calling you.'));
-    b.append(para('Honest limits: groups, communities and Team chat are not encrypted yet, and the server can still see who talks to whom and when. Back up your key with a passphrase, or you lose old private chats if you lose your phone. Everyone shares one server (Firebase).'));
+    b.append(para('One-to-one chats and new groups are end-to-end encrypted: only the people in them can read them, and the server stores unreadable data. Check the security code in a chat to be sure. Blocking stops someone from messaging or calling you.'));
+    b.append(para('Honest limits: communities and Team chat are not encrypted (they are open to many people), older groups stay unencrypted, and the server can still see who talks to whom and when. Back up your key with a passphrase, or you lose old private chats if you lose your phone. Everyone shares one server (Firebase).'));
   });
 }
 function dispDefaultPage() {
@@ -1725,7 +1790,7 @@ async function exportChats() {
       if (id === 'general' && !showTeam) continue;
       const snap = await getDocs(query(colFor(id), orderBy('createdAt', 'asc'), limitToLast(500)));
       const c = id === 'general' ? GENERAL : chats.get(id);
-      const msgs = []; for (const d of snap.docs) { const x = d.data(); msgs.push(slim(x.type === 'enc' ? await openMsg(x) : x)); }
+      const msgs = []; for (const d of snap.docs) { const x = d.data(); msgs.push(slim(x.type === 'enc' ? await openMsg(x, id) : x)); }
       out.chats.push({ id, name: chatTitle(c), type: c.type, messages: msgs });
     }
     const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' }), a = document.createElement('a');
@@ -1828,7 +1893,7 @@ const FAQ = [
   ['Why do my files say too large?', 'Files are stored for free inside the database and are limited to about 600 KB. Photos shrink automatically. For videos, the owner can add free Cloudinary storage.'],
   ['How do I stop someone contacting me?', 'Open their chat, tap the menu, and choose Block. Manage the list in Settings, Privacy, Blocked accounts.'],
   ['I forgot my app lock PIN.', 'On the lock screen choose “Forgot PIN”. You will be signed out and the lock removed; sign in again with your email or Google.'],
-  ['Are my messages end-to-end encrypted?', 'One-to-one chats are. Groups, communities and Team chat are not yet. Back up your key in Settings, Privacy so you can read old chats on a new phone.']
+  ['Are my messages end-to-end encrypted?', 'One-to-one chats and new groups are. Communities, Team chat and older groups are not. Back up your key in Settings, Privacy so you can read old chats on a new phone.']
 ];
 async function testCalls() {
   await ensureIce(); const pc = new RTCPeerConnection(ICE), seen = { host: 0, srflx: 0, relay: 0 }, errs = [];
