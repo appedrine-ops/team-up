@@ -248,6 +248,8 @@ button.srow{width:100%;text-align:left}
     <div class="panes">
       <div class="pane on" id="paneChats">
         <label class="search"><span data-ic="search"></span><input id="chatSearch" data-tp="search" placeholder="Search chats" aria-label="Search chats"></label>
+        <div class="dispbar" id="encBar" hidden><span id="encTxt" style="flex:1"></span><button class="btn sm" id="encBtn" type="button"></button></div>
+        <div class="dispbar" id="verifyBar" hidden><span style="flex:1">Please verify your email address</span><button class="btn sm" id="verifyResend" type="button">Resend</button><button class="btn sm sec" id="verifyDone" type="button">Done</button></div>
         <div class="dispbar" id="notifBar" hidden><span style="flex:1">Get alerts for new messages and calls</span><button class="btn sm" id="notifOn" type="button">Turn on</button><button class="ib" id="notifNo" type="button" aria-label="Not now" data-ic="x"></button></div>
         <div id="chatList"></div>
       </div>
@@ -282,6 +284,7 @@ button.srow{width:100%;text-align:left}
       <button class="ib" id="videoCall" aria-label="Video call" data-ic="video"></button>
       <button class="ib" id="chatMenu" aria-label="More" data-ic="more"></button>
     </header>
+    <div class="dispbar" id="encNote" hidden style="cursor:pointer"></div>
     <div class="dispbar" id="dispBar" hidden></div>
     <div class="msgs" id="messages" aria-live="polite">
       <div id="list"></div>
@@ -423,7 +426,7 @@ button.srow{width:100%;text-align:left}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile, signOut, sendPasswordResetEmail, sendEmailVerification, deleteUser } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
 import { getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDocs, query, where, orderBy, limitToLast, limit, onSnapshot, serverTimestamp, arrayUnion, arrayRemove, FieldPath, Timestamp, deleteField } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
 
 import * as FSX from "https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js";
@@ -693,7 +696,7 @@ $('authForm').addEventListener('submit', async e => {
     if (pw.length < 6) return authFail('Password must be at least 6 characters.');
     if (pw !== $('authConfirm').value) return authFail('The two passwords do not match.');
     setBusy(true);
-    try { const c = await createUserWithEmailAndPassword(auth, email, pw); await updateProfile(c.user, { displayName: nm }); await beat(); }
+    try { const c = await createUserWithEmailAndPassword(auth, email, pw); await updateProfile(c.user, { displayName: nm }); try { await sendEmailVerification(c.user); } catch {} await beat(); }
     catch (er) { authFail(authMsg(er)); } finally { setBusy(false); }
   } else {
     if (!pw) return authFail('Please enter your password.');
@@ -717,6 +720,7 @@ function teardown() {
   Object.keys(U).forEach(k => { if (U[k]) { try { U[k](); } catch {} U[k] = null; } });
   clearInterval(heartbeat); clearInterval(refresher);
   if (call) endCall(true); hideIncoming(); closeOverlays(); if (curScreen !== 'main') { closeChatState(); setScreen('main'); }
+  Object.assign(E2E, { priv: null, pubStr: '', ready: false, needRestore: false, stale: false, hasBackup: false, backup: null, started: false }); keyCache.clear();
   users.clear(); chats.clear(); communities.clear(); blocked.clear(); known.clear(); statuses = []; callsData = []; generalLast = null; chatsReady = false;
   $('chatList').innerHTML = ''; $('people').innerHTML = ''; $('upList').innerHTML = '';
 }
@@ -730,11 +734,11 @@ function startSession() {
   readMap = lsGet('dxel-read-' + me.uid, {}); seenMap = lsGet('dxel-seen-' + me.uid, {});
   hiddenIds = new Set([...lsGet('dxel-hidden-' + me.uid, []), ...lsGet('teamup-hidden-' + me.uid, [])]);
   hiddenChats = lsGet('dxel-hchats-' + me.uid, {}); showTeam = lsGet('dxel-showteam', true);
-  setTab('chats'); beat(); registerDevice(); heartbeat = setInterval(beat, 30000);
+  setTab('chats'); showVerifyBar(); beat(); registerDevice(); heartbeat = setInterval(beat, 30000);
   refresher = setInterval(() => { renderChats(); if (tab === 'calls') renderPeople(); if (active) renderChatHeader(); }, 30000);
   U.users = onSnapshot(collection(db, 'users'), snap => {
     users.clear(); snap.forEach(d => users.set(d.id, { id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
-    usersLoaded = true;
+    usersLoaded = true; if (!E2E.started) { E2E.started = true; initE2E(); } else if (E2E.ready && users.get(me.uid) && users.get(me.uid).pub === undefined) publishPub();
     if (pendingTo) { const t = pendingTo; pendingTo = null; try { history.replaceState(history.state, '', location.pathname); } catch {} if (t === me.uid) toast('That is your own chat link'); else if (users.has(t)) setTimeout(() => openPerson(t), 0); else toast('Could not find that person'); }
     renderChats(); renderPeople(); renderUpdates(); if (active) renderChatHeader(); if (curScreen === 'settings') fillSettings(false);
   }, err => { console.error(err); toast('Could not load people. Publish the Firestore rules.'); });
@@ -963,6 +967,7 @@ function renderChatHeader() {
   $('chatStatus').textContent = s; refreshTicks();
   const bp = c.type === 'dm' && blocked.has(otherOf(c));
   $('voiceCall').hidden = $('videoCall').hidden = c.type !== 'dm' || bp; applyBlockUI(c);
+  const en = $('encNote'); if (c.type === 'dm') { const on = E2E.ready && !!users.get(otherOf(c))?.pub; en.hidden = false; en.innerHTML = ic('lock') + '<span>' + (on ? 'Messages are end-to-end encrypted. Tap to verify.' : 'Not end-to-end encrypted yet: waiting for ' + chatTitle(c).split(' ')[0] + ' to update the app.') + '</span>'; en.onclick = on ? () => verifySheet(c) : null; } else en.hidden = true;
   const db_ = $('dispBar'); db_.hidden = !c.disappear; if (c.disappear) db_.innerHTML = ic('clock') + '<span>Disappearing messages are on: ' + dispName(c.disappear) + '</span>';
 }
 function applyBlockUI(c = curChat()) {
@@ -996,7 +1001,7 @@ $('chatMenu').addEventListener('click', e => {
   e.stopPropagation(); const c = curChat(); if (!c) return;
   const items = [['info', c.type === 'dm' ? 'Contact info' : c.type === 'general' ? 'Info' : c.type === 'community' ? 'Community info' : 'Group info', chatInfo], ['trash', 'Clear chat on this phone', clearLocal]];
   if (c.type !== 'general') items.splice(1, 0, ['clock', 'Disappearing messages', chatDispPage]);
-  if (c.type === 'dm') { const u = users.get(otherOf(c)) || { id: otherOf(c), displayName: chatTitle(c) }; items.push(['x', 'Delete chat', deleteChatLocal], ['ban', blocked.has(u.id) ? 'Unblock' : 'Block', () => toggleBlock(u)]); }
+  if (c.type === 'dm') { const u = users.get(otherOf(c)) || { id: otherOf(c), displayName: chatTitle(c) }; items.push(['x', 'Delete chat', deleteChatLocal], ['ban', blocked.has(u.id) ? 'Unblock' : 'Block', () => toggleBlock(u)], ['info', 'Report', () => reportSheet(u, c.id)]); }
   if (c.type === 'group' || c.type === 'community') items.push(['logout', c.type === 'community' ? 'Leave community' : 'Leave group', leaveChat]);
   showMenu(items);
 });
@@ -1016,6 +1021,7 @@ function chatInfo() {
       const u = users.get(otherOf(c)) || {}; top.append(el('p', null, u.about || 'Hey there! I am using Dxel Chat'), el('p', null, statusText(u))); b.append(top);
       const r = el('div', 'row2'); const p = el('button', 'cb'); p.type = 'button'; p.innerHTML = ic('phone'); p.onclick = () => { closeSheet(); $('voiceCall').click(); };
       const v = el('button', 'cb'); v.type = 'button'; v.innerHTML = ic('video'); v.onclick = () => { closeSheet(); $('videoCall').click(); }; r.append(p, v); b.append(r);
+      b.append(rowBtn('lock', 'Verify security code', () => { closeSheet(); verifySheet(c); }));
     } else if (c.type === 'general') { top.append(el('p', null, 'Everyone on Dxel Chat can read and write here.')); b.append(top); }
     else {
       if (c.description) top.append(el('p', null, c.description)); b.append(top);
@@ -1030,28 +1036,34 @@ function chatInfo() {
 function stopMsgs() { if (U.msgs) { try { U.msgs(); } catch {} U.msgs = null; } }
 function resetMsgUI() { $('list').innerHTML = ''; rows.clear(); msgCache.clear(); selectedRow = null; firstSnap = true; $('emptyNote').hidden = true; }
 const previewOf = m => m.type === 'voice' ? 'Voice note' : m.type === 'file' ? ((m.mimeType || '').startsWith('image/') ? 'Photo' : (m.mimeType || '').startsWith('video/') ? 'Video' : (m.fileName || 'File')) : (m.text || '');
+let msgChain = Promise.resolve();
 function startMsgs() {
   const id = active.id;
   U.msgs = onSnapshot(query(colFor(id), orderBy('createdAt', 'asc'), limitToLast(100)), { includeMetadataChanges: true }, snap => {
-    if (!active || active.id !== id) return;
-    const box = $('messages'), list = $('list'); const near = box.scrollHeight - box.scrollTop - box.clientHeight < 200; let own = false;
-    list.querySelectorAll('.daysep').forEach(n => n.remove());
-    snap.docChanges().forEach(ch => {
-      const mid = ch.doc.id;
-      if (ch.type === 'removed') { rows.get(mid)?.remove(); rows.delete(mid); msgCache.delete(mid); return; }
-      if (hiddenIds.has(mid)) { rows.get(mid)?.remove(); rows.delete(mid); return; }
-      const m = ch.doc.data({ serverTimestamps: 'estimate' }); msgCache.set(mid, m);
-      if (m.expiresAt && m.expiresAt <= Date.now()) { expireMsg(mid, m); return; }
-      const row = buildRow(mid, m, ch.doc.metadata.hasPendingWrites), old = rows.get(mid);
-      if (old) old.replaceWith(row); else list.append(row);
-      rows.set(mid, row); if (ch.type === 'added' && m.uid === me.uid) own = true;
-    });
-    const want = snap.docs.map(d => d.id).filter(x => rows.has(x)), have = [...list.querySelectorAll('.mrow')].map(r => r.dataset.id);
-    if (want.join() !== have.join()) want.forEach(x => list.append(rows.get(x)));
-    fixDays(); $('emptyNote').hidden = rows.size > 0;
-    if (firstSnap || near || own) box.scrollTop = box.scrollHeight;
-    refreshTicks(); firstSnap = false; if (curScreen === 'chat' && !document.hidden) markRead(id);
+    msgChain = msgChain.then(() => handleMsgs(id, snap)).catch(e => console.error(e));
   }, err => { console.error(err); toast('Chat blocked. Publish the Firestore rules from firestore.rules.'); });
+}
+async function handleMsgs(id, snap) {
+  if (!active || active.id !== id) return;
+  const box = $('messages'), list = $('list'); const near = box.scrollHeight - box.scrollTop - box.clientHeight < 200; let own = false;
+  list.querySelectorAll('.daysep').forEach(n => n.remove());
+  for (const ch of snap.docChanges()) {
+    const mid = ch.doc.id;
+    if (ch.type === 'removed') { rows.get(mid)?.remove(); rows.delete(mid); msgCache.delete(mid); continue; }
+    if (hiddenIds.has(mid)) { rows.get(mid)?.remove(); rows.delete(mid); continue; }
+    let m = ch.doc.data({ serverTimestamps: 'estimate' }); if (m.type === 'enc') m = await openMsg(m);
+    if (!active || active.id !== id) return;
+    msgCache.set(mid, m);
+    if (m.expiresAt && m.expiresAt <= Date.now()) { expireMsg(mid, m); continue; }
+    const row = buildRow(mid, m, ch.doc.metadata.hasPendingWrites), old = rows.get(mid);
+    if (old) old.replaceWith(row); else list.append(row);
+    rows.set(mid, row); if (ch.type === 'added' && m.uid === me.uid) own = true;
+  }
+  const want = snap.docs.map(d => d.id).filter(x => rows.has(x)), have = [...list.querySelectorAll('.mrow')].map(r => r.dataset.id);
+  if (want.join() !== have.join()) want.forEach(x => list.append(rows.get(x)));
+  fixDays(); $('emptyNote').hidden = rows.size > 0;
+  if (firstSnap || near || own) box.scrollTop = box.scrollHeight;
+  refreshTicks(); firstSnap = false; if (curScreen === 'chat' && !document.hidden) markRead(id);
 }
 function fixDays() {
   const list = $('list'); list.querySelectorAll('.daysep').forEach(n => n.remove()); let last = '';
@@ -1141,9 +1153,15 @@ input.addEventListener('input', () => { input.style.height = 'auto'; input.style
 input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !matchMedia('(pointer:coarse)').matches) { e.preventDefault(); form.requestSubmit(); } });
 input.addEventListener('paste', e => { const files = [...(e.clipboardData?.files || [])]; if (files.length) { e.preventDefault(); files.forEach(f => queueUpload(f)); } });
 async function sendTo(chatId, data) {
-  const dc = chatId === 'general' ? null : chats.get(chatId); if (dc?.disappear) data = { ...data, expiresAt: Date.now() + dc.disappear };
-  await addDoc(colFor(chatId), { ...data, uid: me.uid, displayName: myName(), createdAt: serverTimestamp() });
-  if (chatId !== 'general') updateDoc(doc(db, 'chats', chatId), { lastText: previewOf(data).slice(0, 120), lastAt: serverTimestamp(), lastUid: me.uid, lastName: myName() }).catch(() => {});
+  const dc = chatId === 'general' ? null : chats.get(chatId);
+  const base = { uid: me.uid, displayName: myName(), createdAt: serverTimestamp() }; if (dc?.disappear) base.expiresAt = Date.now() + dc.disappear;
+  let body = { ...data }, preview = previewOf(data).slice(0, 120);
+  if (dc?.type === 'dm') {
+    if (E2E.needRestore || E2E.stale) throw Object.assign(new Error('locked'), { code: 'e2e-locked' });
+    const sealed = await sealMsg(dc, data); if (sealed) { body = { type: 'enc', ...sealed }; preview = '🔒 Message'; }
+  }
+  await addDoc(colFor(chatId), { ...body, ...base });
+  if (chatId !== 'general') updateDoc(doc(db, 'chats', chatId), { lastText: preview, lastAt: serverTimestamp(), lastUid: me.uid, lastName: myName() }).catch(() => {});
 }
 input.addEventListener('input', () => { if (input.value.trim()) sendTyping(true); });
 form.addEventListener('submit', async e => {
@@ -1152,7 +1170,7 @@ form.addEventListener('submit', async e => {
   if (text.length > 2000) { alert('Please keep messages under 2,000 characters.'); return; }
   const data = { type: 'text', text }; if (replyTo) data.replyTo = { id: replyTo.id, name: replyTo.name, text: replyTo.text };
   input.value = ''; input.style.height = 'auto'; setReply(null); syncComposer(); sendTyping(false);
-  try { await sendTo(active.id, data); } catch (er) { console.error(er); input.value = text; syncComposer(); toast(er.code === 'permission-denied' && active?.type === 'dm' ? "You can't message this person right now." : 'Message not sent. Check your connection and Firestore rules.'); }
+  try { await sendTo(active.id, data); } catch (er) { console.error(er); input.value = text; syncComposer(); toast(er.code === 'e2e-locked' ? 'Unlock your private chats first (Chats screen, Unlock).' : er.code === 'permission-denied' && active?.type === 'dm' ? "You can't message this person right now." : 'Message not sent. Check your connection and Firestore rules.'); }
 });
 $('actionBtn').addEventListener('click', () => { if (rec) return stopRec(true); if (input.value.trim()) return form.requestSubmit(); startRec(); });
 $('attachBtn').addEventListener('click', e => { e.stopPropagation(); if (rec) return stopRec(false); $('emojiPanel').hidden = true; $('attachMenu').hidden = !$('attachMenu').hidden; });
@@ -1371,6 +1389,180 @@ function callPeopleSheet() {
   });
 }
 
+/* ================= END-TO-END ENCRYPTION (private one-to-one chats) ================= */
+// Each person has an ECDH key pair. The private key stays on the phone. Two people derive a shared secret from their keys and
+// encrypt every message with AES-GCM, so the server only stores unreadable data. Groups and Team chat are NOT encrypted yet.
+const E2E = { priv: null, pubStr: '', ready: false, needRestore: false, stale: false, hasBackup: false, backup: null, started: false };
+const ECP = { name: 'ECDH', namedCurve: 'P-256' };
+const b64 = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode(...u8.subarray(i, i + 0x8000)); return btoa(s); };
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const toStore = u8 => FSX.Bytes ? FSX.Bytes.fromUint8Array(u8) : b64(u8);
+const fromStore = v => typeof v === 'string' ? unb64(v) : v.toUint8Array();
+const pubOf = jwk => JSON.stringify({ crv: jwk.crv, kty: jwk.kty, x: jwk.x, y: jwk.y });
+const keyCache = new Map(); const TE = new TextEncoder(), TD = new TextDecoder();
+async function loadKeys(stored) { E2E.priv = await crypto.subtle.importKey('jwk', stored.priv, ECP, false, ['deriveKey']); E2E.pubStr = pubOf(stored.priv); E2E.ready = true; E2E.needRestore = false; E2E.stale = false; keyCache.clear(); }
+async function publishPub() { try { await setDoc(doc(db, 'users', me.uid), { pub: E2E.pubStr }, { merge: true }); } catch (e) { console.warn('pub', e.code); } }
+async function createKeys() {
+  const kp = await crypto.subtle.generateKey(ECP, true, ['deriveKey']); const priv = await crypto.subtle.exportKey('jwk', kp.privateKey);
+  const stored = { priv }; lsSet('dxel-e2e-' + me.uid, stored); await loadKeys(stored); await publishPub();
+}
+async function initE2E() {
+  if (!window.crypto?.subtle) return; const mine = users.get(me.uid) || {}; let bk = null;
+  try { const s = await getDocs(collection(db, 'users', me.uid, 'private')); s.forEach(d => { if (d.id === 'keybackup') bk = d.data(); }); } catch {}
+  E2E.backup = bk; E2E.hasBackup = !!bk; const stored = lsGet('dxel-e2e-' + me.uid, null);
+  try {
+    if (stored) { await loadKeys(stored); if (mine.pub === undefined) await publishPub(); else if (mine.pub !== E2E.pubStr) E2E.stale = true; }
+    else if (bk || mine.pub) E2E.needRestore = true;
+    else await createKeys();
+  } catch (e) { console.error('e2e init', e); }
+  showEncBar(); refreshChatMsgs();
+}
+async function sharedKey(theirPub) {
+  if (keyCache.has(theirPub)) return keyCache.get(theirPub);
+  const pub = await crypto.subtle.importKey('jwk', JSON.parse(theirPub), ECP, false, []);
+  const k = await crypto.subtle.deriveKey({ name: 'ECDH', public: pub }, E2E.priv, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']); keyCache.set(theirPub, k); return k;
+}
+async function sealMsg(chat, data) {
+  const theirPub = users.get(otherOf(chat))?.pub; if (!E2E.ready || !theirPub) return null;
+  const key = await sharedKey(theirPub), iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, TE.encode(JSON.stringify(data))));
+  return { enc: { iv: toStore(iv), ct: toStore(ct) }, spub: E2E.pubStr, rpub: theirPub };
+}
+async function openMsg(m) {
+  const base = { uid: m.uid, displayName: m.displayName, createdAt: m.createdAt, expiresAt: m.expiresAt, reactions: m.reactions };
+  try {
+    if (!E2E.ready) throw new Error('locked');
+    const key = await sharedKey(m.uid === me.uid ? m.rpub : m.spub);
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: fromStore(m.enc.iv) }, key, fromStore(m.enc.ct));
+    return { ...JSON.parse(TD.decode(pt)), ...base, e2e: true };
+  } catch { return { type: 'text', text: '🔒 This message cannot be read on this phone.', ...base, locked: true }; }
+}
+function refreshChatMsgs() { if (active) { stopMsgs(); resetMsgUI(); startMsgs(); } }
+/* backup with a passphrase */
+async function passKey(pass, salt) { const base = await crypto.subtle.importKey('raw', TE.encode(pass), 'PBKDF2', false, ['deriveKey']); return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 250000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']); }
+async function saveBackup(pass) {
+  const stored = lsGet('dxel-e2e-' + me.uid, null); if (!stored) throw new Error('no key');
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12)), key = await passKey(pass, salt);
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, TE.encode(JSON.stringify(stored.priv))));
+  const d = { v: 1, salt: b64(salt), iv: b64(iv), ct: b64(ct), pub: E2E.pubStr, updatedAt: serverTimestamp() };
+  await setDoc(doc(db, 'users', me.uid, 'private', 'keybackup'), d); E2E.hasBackup = true; E2E.backup = d; showEncBar();
+}
+async function restoreBackup(pass) {
+  const bk = E2E.backup; if (!bk) throw new Error('no backup');
+  const key = await passKey(pass, unb64(bk.salt)); let priv;
+  try { priv = JSON.parse(TD.decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: unb64(bk.iv) }, key, unb64(bk.ct)))); } catch { throw new Error('wrong'); }
+  const stored = { priv }; lsSet('dxel-e2e-' + me.uid, stored); await loadKeys(stored); if (users.get(me.uid)?.pub !== E2E.pubStr) await publishPub(); showEncBar(); refreshChatMsgs();
+}
+async function resetKeys() { try { await deleteDoc(doc(db, 'users', me.uid, 'private', 'keybackup')); } catch {} E2E.hasBackup = false; E2E.backup = null; await createKeys(); showEncBar(); refreshChatMsgs(); }
+function passField(label) { const w = el('div', 'field'); w.style.marginTop = '8px'; const l = el('label', null, label), i = document.createElement('input'); i.type = 'password'; i.autocomplete = 'off'; i.maxLength = 100; w.append(l, i); return [w, i]; }
+function backupPage() {
+  page('Encryption backup', (b, draw) => {
+    b.append(para(E2E.ready ? (E2E.hasBackup ? 'Your encryption key is backed up. You can restore your private chats on a new phone with your passphrase.' : 'Not backed up. If you lose this phone or clear its data, your old private chats cannot be read again.') : 'Encryption is not active on this phone.'));
+    if (!E2E.ready) return;
+    const [w1, p1] = passField('New passphrase (at least 8 characters)'), [w2, p2] = passField('Repeat passphrase');
+    const save = el('button', 'btn wide', E2E.hasBackup ? 'Change passphrase' : 'Back up my key'); save.type = 'button'; save.style.marginTop = '10px';
+    save.onclick = async () => { if (p1.value.length < 8) { toast('Use at least 8 characters'); return; } if (p1.value !== p2.value) { toast('Passphrases do not match'); return; } save.disabled = true; try { await saveBackup(p1.value); toast('Backed up'); draw(); } catch { toast('Could not save the backup. Publish the new Firestore rules.'); save.disabled = false; } };
+    b.append(w1, w2, save, para('Write the passphrase down. Nobody can recover it for you, not even the app owner.'));
+    const rs = el('button', 'btn danger wide', 'Reset encryption'); rs.type = 'button'; rs.style.marginTop = '8px';
+    rs.onclick = async () => { if (!confirm('Create a new key? Your old private chats will no longer be readable on any phone.')) return; await resetKeys(); toast('New key created'); draw(); }; b.append(rs);
+  });
+}
+function restorePage() {
+  page('Unlock private chats', (b, draw) => {
+    if (E2E.backup) {
+      b.append(para('Enter your encryption passphrase to read your private chats on this phone.'));
+      const [w, p] = passField('Passphrase'); const go_ = el('button', 'btn wide', 'Unlock'); go_.type = 'button'; go_.style.marginTop = '10px';
+      go_.onclick = async () => { go_.disabled = true; try { await restoreBackup(p.value); toast('Private chats unlocked'); closeSheet(); } catch (e) { toast(e.message === 'wrong' ? 'Wrong passphrase' : 'Could not unlock'); go_.disabled = false; } };
+      b.append(w, go_);
+    } else b.append(para('This account has an encryption key on another phone, but no backup was saved. This phone cannot read old private chats.'));
+    const nk = el('button', 'btn sec wide', 'Start with a new key'); nk.type = 'button'; nk.style.marginTop = '12px';
+    nk.onclick = async () => { if (!confirm('Old private chats will stay unreadable. Continue?')) return; await resetKeys(); toast('New key created'); closeSheet(); }; b.append(nk);
+  });
+}
+function showEncBar() {
+  const bar = $('encBar'); let txt = '', btn = '', fn = null;
+  if (E2E.needRestore || E2E.stale) { txt = 'Private chats are locked on this phone'; btn = 'Unlock'; fn = restorePage; }
+  else if (E2E.ready && !E2E.hasBackup && !lsGet('dxel-e2e-nudge-' + me?.uid, false)) { txt = 'Back up your encryption key so you never lose private chats'; btn = 'Back up'; fn = () => { lsSet('dxel-e2e-nudge-' + me.uid, true); showEncBar(); backupPage(); }; }
+  bar.hidden = !txt; if (txt) { $('encTxt').textContent = txt; $('encBtn').textContent = btn; $('encBtn').onclick = fn; }
+}
+async function fingerprint(a, b) {
+  const h = new Uint8Array(await crypto.subtle.digest('SHA-256', TE.encode([a, b].sort().join('|')))); const g = [];
+  for (let i = 0; i < 12; i++) g.push(String(((h[2 * i] << 8) | h[2 * i + 1]) % 100000).padStart(5, '0')); return g;
+}
+async function verifySheet(c) {
+  const theirs = users.get(otherOf(c))?.pub; if (!E2E.ready || !theirs) { toast('Encryption is not active in this chat yet'); return; }
+  const g = await fingerprint(E2E.pubStr, theirs);
+  page('Security code', b => {
+    b.append(para('To check that no one is listening in, compare these numbers with ' + chatTitle(c) + ' in person or on a call. If they match, your chat is private.'));
+    const box = el('div', 'kv'); box.style.cssText = 'display:block;text-align:center;font:600 18px/1.9 ui-monospace,monospace;letter-spacing:1px;border:1px solid var(--line);border-radius:14px'; box.textContent = g.slice(0, 6).join(' ') + '\n' + g.slice(6).join(' '); box.style.whiteSpace = 'pre-line'; b.append(box);
+  });
+}
+
+/* ================= SAFETY: report, delete account, verify email, legal ================= */
+function reportSheet(u, chatId) {
+  page('Report ' + (u.displayName || 'this person'), (b) => {
+    b.append(para('Tell us what is wrong. The app owner will review your report. The person is not told that you reported them. You can also block them from the chat menu.'));
+    let reason = 'Spam'; const cs = el('div', 'chipsel');
+    ['Spam', 'Harassment', 'Fake account', 'Inappropriate content', 'Other'].forEach(n => { const x = el('button', n === reason ? 'on' : '', n); x.type = 'button'; x.onclick = () => { reason = n; [...cs.children].forEach(c => c.classList.toggle('on', c === x)); }; cs.append(x); });
+    const ta = el('textarea', 'fbta'); ta.maxLength = 500; ta.placeholder = 'Add details (optional)'; ta.setAttribute('aria-label', 'Details');
+    const send = el('button', 'btn wide', 'Send report'); send.type = 'button'; send.style.marginTop = '10px';
+    send.onclick = async () => { send.disabled = true; try { await addDoc(collection(db, 'reports'), { reporter: me.uid, reporterName: myName(), reported: u.id, reportedName: u.displayName || '', chatId: chatId || '', reason, text: ta.value.trim(), createdAt: serverTimestamp() }); toast('Report sent. Thank you'); closeSheet(); } catch { toast('Could not send. Publish the new Firestore rules.'); send.disabled = false; } };
+    b.append(cs, ta, send);
+  });
+}
+async function deleteAccount() {
+  if (!confirm('Delete your Dxel Chat account? Your profile, status updates and settings are removed and you cannot undo this. Messages you already sent stay in other people’s chats.')) return;
+  if (!confirm('Really delete your account for good?')) return;
+  const uid = me.uid;
+  try {
+    const st = await getDocs(query(collection(db, 'status'), where('uid', '==', uid))); await Promise.all(st.docs.map(d => deleteDoc(d.ref).catch(() => {})));
+    const dv = await getDocs(collection(db, 'users', uid, 'devices')); await Promise.all(dv.docs.map(d => deleteDoc(d.ref).catch(() => {})));
+    await Promise.all([...blocked].map(x => deleteDoc(doc(db, 'blocks', uid + '_' + x)).catch(() => {})));
+    await deleteDoc(doc(db, 'users', uid));
+    await deleteUser(auth.currentUser);
+    ['dxel-prefs', 'dxel-lock', 'dxel-device', 'dxel-showteam', 'dxel-read-' + uid, 'dxel-seen-' + uid, 'dxel-hidden-' + uid, 'dxel-hchats-' + uid].forEach(k => { try { localStorage.removeItem(k); } catch {} });
+    toast('Your account was deleted');
+  } catch (e) {
+    console.error(e);
+    toast(e.code === 'auth/requires-recent-login' ? 'For safety, sign out, sign in again, then delete your account.' : 'Could not delete your account. Try again.');
+  }
+}
+function showVerifyBar() {
+  const u = auth.currentUser, need = !!u && !u.emailVerified && (u.providerData || []).some(p => p.providerId === 'password');
+  $('verifyBar').hidden = !need;
+}
+$('verifyResend').addEventListener('click', async () => { try { await sendEmailVerification(auth.currentUser); toast('Verification email sent. Check your inbox and spam'); } catch { toast('Could not send now. Try again later.'); } });
+$('verifyDone').addEventListener('click', async () => { try { await auth.currentUser.reload(); } catch {} showVerifyBar(); toast(auth.currentUser?.emailVerified ? 'Email verified. Thank you' : 'Not verified yet'); });
+const OWNER_CONTACT = 'the app owner'; // put your email here, for example 'you@example.com'
+function legalPage(kind) {
+  const privacy = [
+    ['What we collect', 'Your name, email address, profile photo, the messages, files, voice notes and status updates you send, when you were last online, your blocked list, and the devices you are signed in on.'],
+    ['Where it is stored', 'On Google Firebase servers. Everyone who uses Dxel Chat shares this one service. Settings such as theme, language and app lock stay on your phone.'],
+    ['Who can see it', 'Only the people in a chat can read it through the app. One-to-one chats are end-to-end encrypted, so the person who runs this app’s Firebase project cannot read them. Groups, communities and Team chat are not encrypted yet and can be read by that person. Names, photos and who-talks-to-whom stay visible to the server. Your name and photo are visible to other users unless you turn on “Hide me from the People list”.'],
+    ['Calls', 'Voice and video go directly between phones when possible, or through a relay server when the network requires it. We do not record calls.'],
+    ['Your choices', 'Edit your profile, hide your last seen, block or report people, set disappearing messages, export your chats, or delete your account in Settings.'],
+    ['Contact', 'Questions or removal requests: ' + OWNER_CONTACT + '.']
+  ];
+  const terms = [
+    ['Using Dxel Chat', 'Be kind. Do not harass, threaten, spam, share illegal content, or pretend to be someone else. Do not share sexual content involving children. We may remove content and accounts that break these rules.'],
+    ['Your content', 'You are responsible for what you send. Others can keep copies of messages you send them.'],
+    ['No guarantees', 'Dxel Chat is provided as is. Calls and messages may fail, and the service may change or stop. Do not rely on it for emergencies.'],
+    ['Accounts', 'You can delete your account at any time in Settings.'],
+    ['Contact', OWNER_CONTACT]
+  ];
+  page(kind === 'privacy' ? 'Privacy policy' : 'Terms of use', b => {
+    (kind === 'privacy' ? privacy : terms).forEach(([h, t]) => { b.append(el('div', 'sub', h)); b.append(para(t)); });
+    b.append(para('This is a plain-language summary and not legal advice. Have it reviewed by a lawyer before a public launch.'));
+  });
+}
+function aboutPage() {
+  page('About Dxel Chat', b => {
+    b.append(group(navRow('lock', 'Privacy policy', '', () => legalPage('privacy')), navRow('info', 'Terms of use', '', () => legalPage('terms'))));
+    b.append(group(navRow('trash', 'Delete my account', 'Remove your profile and sign out for good', () => { closeSheet(); deleteAccount(); })));
+    b.append(para('Dxel Chat version ' + APP_VERSION));
+  });
+}
+
 /* ================= PREFERENCES (this device) ================= */
 const APP_VERSION = '2.0';
 const prefs = Object.assign({ theme: 'green', wall: 'none', icon: 'dark', fs: 1, hc: false, rm: false, bold: false, lang: 'en', tone: 'chime', callTone: 'classic', preview: true, sound: true, vibe: true, remind: false, remindMin: 30, photoQ: 'normal', dispDefault: 0 }, lsGet('dxel-prefs', {}));
@@ -1454,7 +1646,8 @@ function renderSettingsList() {
     navRow('monitor', T('linked'), 'Where you are signed in', linkedDevicesSheet),
     navRow('info', T('help'), 'FAQ and send feedback', helpPage),
     navRow('userPlus', T('invite'), 'Share the link', invitePage),
-    navRow('check', T('appUpdates'), 'Version ' + APP_VERSION, updatesPage)
+    navRow('check', T('appUpdates'), 'Version ' + APP_VERSION, updatesPage),
+    navRow('info', 'About, privacy and terms', 'Policies and delete account', aboutPage)
   );
 }
 function fillSettings(resetFields = true) {
@@ -1476,9 +1669,10 @@ function privacyPage() {
       navRow('clock', 'Disappearing messages', 'Default for new chats: ' + dispName(prefs.dispDefault), dispDefaultPage),
       toggleRow('lock', 'App lock (PIN)', 'Ask for a 4-digit PIN when you open Dxel Chat', !!lockCfg, (on, cb) => { toggleLock(on, draw); cb.checked = !!lockCfg; })
     ));
+    b.append(group(navRow('lock', 'Encryption backup', E2E.ready ? (E2E.hasBackup ? 'Key is backed up' : 'Not backed up yet') : (E2E.needRestore ? 'Locked on this phone' : 'Not active'), E2E.needRestore ? restorePage : backupPage)));
     b.append(el('div', 'sub', 'How privacy works here'));
-    b.append(para('Private chats and calls are only readable by the two people in them: Dxel Chat checks this on the server. Blocking stops someone from messaging or calling you.'));
-    b.append(para('Honest limits: messages are not end-to-end encrypted, and everyone uses one shared server (Firebase). The person who runs that server can technically see stored data. For secrets, do not send them in any chat app that is not end-to-end encrypted.'));
+    b.append(para('One-to-one chats are end-to-end encrypted: only you and the other person can read them, and the server stores unreadable data. Check the security code in a chat to be sure. Blocking stops someone from messaging or calling you.'));
+    b.append(para('Honest limits: groups, communities and Team chat are not encrypted yet, and the server can still see who talks to whom and when. Back up your key with a passphrase, or you lose old private chats if you lose your phone. Everyone shares one server (Firebase).'));
   });
 }
 function dispDefaultPage() {
@@ -1531,7 +1725,8 @@ async function exportChats() {
       if (id === 'general' && !showTeam) continue;
       const snap = await getDocs(query(colFor(id), orderBy('createdAt', 'asc'), limitToLast(500)));
       const c = id === 'general' ? GENERAL : chats.get(id);
-      out.chats.push({ id, name: chatTitle(c), type: c.type, messages: snap.docs.map(d => slim(d.data())) });
+      const msgs = []; for (const d of snap.docs) { const x = d.data(); msgs.push(slim(x.type === 'enc' ? await openMsg(x) : x)); }
+      out.chats.push({ id, name: chatTitle(c), type: c.type, messages: msgs });
     }
     const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' }), a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = 'dxel-chat-export.json'; document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); toast('Export saved');
@@ -1633,7 +1828,7 @@ const FAQ = [
   ['Why do my files say too large?', 'Files are stored for free inside the database and are limited to about 600 KB. Photos shrink automatically. For videos, the owner can add free Cloudinary storage.'],
   ['How do I stop someone contacting me?', 'Open their chat, tap the menu, and choose Block. Manage the list in Settings, Privacy, Blocked accounts.'],
   ['I forgot my app lock PIN.', 'On the lock screen choose “Forgot PIN”. You will be signed out and the lock removed; sign in again with your email or Google.'],
-  ['Are my messages end-to-end encrypted?', 'No. They are protected by account rules on the server, but the server operator can technically access them.']
+  ['Are my messages end-to-end encrypted?', 'One-to-one chats are. Groups, communities and Team chat are not yet. Back up your key in Settings, Privacy so you can read old chats on a new phone.']
 ];
 async function testCalls() {
   await ensureIce(); const pc = new RTCPeerConnection(ICE), seen = { host: 0, srflx: 0, relay: 0 }, errs = [];
