@@ -22,6 +22,7 @@ html.bold body{font-weight:600}
 .lock{--g1:#f8dc7e;--mut:#9dc5b4;--ov:rgba(255,255,255,.07)}
 .av.ico{color:var(--icocol)}
 .mine .bubble{color:var(--mineText)}.mine .bubble .meta,.mine .bubble .tick{color:#d5efe4}.mine .bubble .lnk{color:#cfe8ff}
+.tick.seen{color:#53bdeb!important}
 .dispbar{display:flex;align-items:center;gap:8px;padding:6px 14px;font-size:12.5px;color:var(--mut);background:var(--ov);flex:none}.dispbar svg{font-size:15px;color:var(--teal)}
 .offbar{position:fixed;top:0;left:0;right:0;z-index:250;background:#7a5b00;color:#fff;text-align:center;font-size:13px;padding:6px 10px}
 .radio{display:flex;align-items:center;gap:12px;width:100%;padding:13px 4px;border-top:1px solid var(--line);text-align:left}.radio:first-child{border-top:0}
@@ -247,6 +248,7 @@ button.srow{width:100%;text-align:left}
     <div class="panes">
       <div class="pane on" id="paneChats">
         <label class="search"><span data-ic="search"></span><input id="chatSearch" data-tp="search" placeholder="Search chats" aria-label="Search chats"></label>
+        <div class="dispbar" id="notifBar" hidden><span style="flex:1">Get alerts for new messages and calls</span><button class="btn sm" id="notifOn" type="button">Turn on</button><button class="ib" id="notifNo" type="button" aria-label="Not now" data-ic="x"></button></div>
         <div id="chatList"></div>
       </div>
       <div class="pane" id="paneUpdates">
@@ -438,21 +440,28 @@ const firebaseConfig = {
 // Mobile networks (MTN, Airtel...) very often need TURN, so a working TURN server is what makes calls connect.
 // BEST FREE OPTION: make a free account at metered.ca (free 50 GB a month), open Dashboard > TURN Server, then copy
 // your app name (the part before .metered.live) and your API key into TURN below. Dxel Chat then fetches fresh credentials itself.
-const TURN = { meteredApp: '', meteredKey: '',
+const TURN = { workerUrl: '', // Cloudflare option: the address of your free Worker (see cloudflare-turn-worker.js)
+  meteredApp: '', meteredKey: '',
   // Or fill your own TURN server (for example from Cloudflare or coturn):
   urls: [], username: '', credential: '' };
 const STUN = { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] };
 // Shared Open Relay entry: free for testing but crowded and unreliable. Used only as a last resort.
 const OPEN_RELAY = { urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443', 'turns:openrelay.metered.ca:443?transport=tcp', 'turn:openrelay.metered.ca:443?transport=tcp'], username: 'openrelayproject', credential: 'openrelayproject' };
 let ICE = { iceServers: [STUN, OPEN_RELAY], iceCandidatePoolSize: 4 }, hasOwnTurn = false;
-const iceReady = (async () => {
+let iceAt = 0;
+async function loadIce() {
   try {
-    if (TURN.meteredApp && TURN.meteredKey) {
-      const r = await fetch(`https://${TURN.meteredApp}.metered.live/api/v1/turn/credentials?apiKey=${encodeURIComponent(TURN.meteredKey)}`);
-      const list = await r.json(); if (Array.isArray(list) && list.length) { ICE = { iceServers: [STUN, ...list, OPEN_RELAY], iceCandidatePoolSize: 4 }; hasOwnTurn = true; }
-    } else if (TURN.urls.length) { ICE = { iceServers: [STUN, { urls: TURN.urls, username: TURN.username, credential: TURN.credential }, OPEN_RELAY], iceCandidatePoolSize: 4 }; hasOwnTurn = true; }
+    let list = null;
+    if (TURN.workerUrl) { const j = await (await fetch(TURN.workerUrl)).json(); list = Array.isArray(j.iceServers) ? j.iceServers : j.iceServers ? [j.iceServers] : null; }
+    else if (TURN.meteredApp && TURN.meteredKey) { const j = await (await fetch(`https://${TURN.meteredApp}.metered.live/api/v1/turn/credentials?apiKey=${encodeURIComponent(TURN.meteredKey)}`)).json(); list = Array.isArray(j) ? j : null; }
+    else if (TURN.urls.length) list = [{ urls: TURN.urls, username: TURN.username, credential: TURN.credential }];
+    if (list?.length) { ICE = { iceServers: [...list, STUN, OPEN_RELAY], iceCandidatePoolSize: 4 }; hasOwnTurn = true; }
   } catch (e) { console.warn('TURN setup', e); }
-})();
+}
+// Credentials are short-lived, so refresh them before a call when they are older than 6 hours.
+async function ensureIce() { if (Date.now() - iceAt > 6 * 3600e3) { iceAt = Date.now(); await loadIce(); } }
+ensureIce();
+
 // FILE STORAGE — free, no credit card.
 // Option A (works now): files are saved inside Firestore. Photos auto-shrink; limit ~600 KB per file.
 // Option B (bigger files, videos): free Cloudinary account + an UNSIGNED upload preset; fill both values below.
@@ -497,6 +506,7 @@ const P = {
   pause: '<rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor"/>',
   clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
   check: '<polyline points="20 6 9 17 4 12"/>',
+  checks: '<polyline points="1 12 6 17 16 6"/><polyline points="9 15 11 17 22 6"/>',
   smile: '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
   more: '<circle cx="12" cy="5" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="19" r="1.8" fill="currentColor"/>',
   settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
@@ -589,6 +599,7 @@ let me = null, curScreen = 'main', tab = 'chats', active = null, chatsReady = fa
 const users = new Map(), chats = new Map(), communities = new Map(), msgCache = new Map(), rows = new Map(), known = new Map();
 let statuses = [], callsData = [], generalLast = null, readMap = {}, seenMap = {}, hiddenIds = new Set(), hiddenChats = {}, showTeam = true, lockCfg = null;
 const blocked = new Set();
+let pendingTo = new URLSearchParams(location.search).get('to'), pendingChat = new URLSearchParams(location.search).get('chat'), usersLoaded = false;
 let replyTo = null, selectedRow = null, rec = null, deferredInstall = null;
 const U = { users: null, chats: null, comm: null, calls: null, incoming: null, status: null, general: null, msgs: null, blocks: null, device: null };
 let heartbeat = null, refresher = null;
@@ -723,6 +734,8 @@ function startSession() {
   refresher = setInterval(() => { renderChats(); if (tab === 'calls') renderPeople(); if (active) renderChatHeader(); }, 30000);
   U.users = onSnapshot(collection(db, 'users'), snap => {
     users.clear(); snap.forEach(d => users.set(d.id, { id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
+    usersLoaded = true;
+    if (pendingTo) { const t = pendingTo; pendingTo = null; try { history.replaceState(history.state, '', location.pathname); } catch {} if (t === me.uid) toast('That is your own chat link'); else if (users.has(t)) setTimeout(() => openPerson(t), 0); else toast('Could not find that person'); }
     renderChats(); renderPeople(); renderUpdates(); if (active) renderChatHeader(); if (curScreen === 'settings') fillSettings(false);
   }, err => { console.error(err); toast('Could not load people. Publish the Firestore rules.'); });
   U.chats = onSnapshot(query(collection(db, 'chats'), where('members', 'array-contains', me.uid)), snap => {
@@ -736,6 +749,7 @@ function startSession() {
       else noteIncoming(d);
     });
     chatsReady = true; renderChats(); if (active) renderChatHeader();
+    if (pendingChat && (pendingChat === 'general' || chats.has(pendingChat))) { const t = pendingChat; pendingChat = null; try { history.replaceState(history.state, '', location.pathname); } catch {} openChat(t); }
   }, err => { console.error(err); toast('Could not load chats. Publish the Firestore rules.'); });
   U.comm = onSnapshot(query(collection(db, 'chats'), where('type', '==', 'community')), snap => {
     communities.clear(); snap.forEach(d => communities.set(d.id, { id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
@@ -813,22 +827,29 @@ function renderChats() {
   else if (!q && !ppl.length && all.length <= 1) box.append(el('p', 'empty', 'Tap the chat button below to message someone, start a group or join a community.'));
   const n = all.filter(isUnread).length; $('chatBadge').hidden = !n; $('chatBadge').textContent = n;
 }
-function markRead(id) { const c = id === 'general' ? GENERAL : chats.get(id); readMap[id] = Math.max(Date.now(), c ? chatMs(c) : 0); saveRead(); renderChats(); }
+function markRead(id) { const c = id === 'general' ? GENERAL : chats.get(id); readMap[id] = Math.max(Date.now(), c ? chatMs(c) : 0); saveRead(); renderChats(); writeSeen(id); }
 function noteIncoming(d) {
   const ms = msOf(d.lastAt), prev = known.get(d.id) || 0; known.set(d.id, Math.max(ms, prev));
   if (ms > prev && d.lastUid && d.lastUid !== me.uid && !(curScreen === 'chat' && active?.id === d.id && !document.hidden)) {
-    notify(chatTitle(d), (d.type !== 'dm' && d.lastName ? d.lastName + ': ' : '') + d.lastText);
+    notify(chatTitle(d), (d.type !== 'dm' && d.lastName ? d.lastName + ': ' : '') + d.lastText, false, d.id);
   }
 }
-function notify(title, body, reminder) {
+function sysNotify(title, opts) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  const o = { icon: LOGO, badge: LOGO, vibrate: [120], ...opts };
+  const fallback = () => { try { new Notification(title, o); } catch {} };
+  // Android Chrome only allows notifications created by the service worker.
+  if (navigator.serviceWorker?.getRegistration) navigator.serviceWorker.getRegistration().then(r => r?.showNotification ? r.showNotification(title, o) : fallback()).catch(fallback); else fallback();
+}
+function notify(title, body, reminder, chatId) {
   if (!reminder && !prefs.preview) body = 'New message';
   toast(`${title}: ${body}`.slice(0, 120));
   if (prefs.sound) playTone(prefs.tone); if (prefs.vibe) navigator.vibrate?.(120);
-  if ('Notification' in window && Notification.permission === 'granted' && document.hidden) { try { new Notification(title, { body, icon: LOGO, tag: 'dxel-msg' }); } catch {} }
+  if (document.hidden) sysNotify(title, { body, tag: 'dxel-msg', renotify: true, data: { chatId } });
 }
 
 /* ---------- new chat / group / community ---------- */
-const others = () => [...users.values()].filter(u => u.id !== me.uid && !blocked.has(u.id)).sort((a, b) => (isOnline(b) - isOnline(a)) || (a.displayName || '').localeCompare(b.displayName || ''));
+const others = () => [...users.values()].filter(u => u.id !== me.uid && !blocked.has(u.id) && !u.hidden).sort((a, b) => (isOnline(b) - isOnline(a)) || (a.displayName || '').localeCompare(b.displayName || ''));
 function personRow(u, onClick, extra) {
   const b = el('button', 'pick'); b.type = 'button'; const info = el('span', 'pinfo');
   info.append(el('strong', null, u.displayName || u.email || 'User'), el('small', null, u.about || statusText(u)));
@@ -910,6 +931,25 @@ function openChat(id) {
   markRead(id); go('chat'); renderChatHeader(); startMsgs(); syncComposer();
 }
 function closeChatState() { stopMsgs(); if (rec) stopRec(false); active = null; setReply(null); renderChats(); }
+/* ---------- typing + seen ---------- */
+const seenSent = {}, seenTimer = {}; let typeSent = 0, typeT = null;
+function writeSeen(id) {
+  if (id === 'general' || !me || users.get(me.uid)?.hideSeen || !chats.has(id)) return;
+  const wait = 2000 - (Date.now() - (seenSent[id] || 0));
+  if (wait > 0) { if (!seenTimer[id]) seenTimer[id] = setTimeout(() => { seenTimer[id] = 0; if (active?.id === id && !document.hidden) writeSeen(id); }, wait); return; }
+  seenSent[id] = Date.now(); updateDoc(doc(db, 'chats', id), new FieldPath('seen', me.uid), serverTimestamp()).catch(() => {});
+}
+function seenByAll(c, ms) { if (!c || c.type === 'general') return false; const o = (c.members || []).filter(x => x !== me.uid); return o.length > 0 && o.every(x => msOf(c.seen?.[x]) >= ms); }
+function refreshTicks() {
+  const c = curChat(); if (!c) return;
+  $('list').querySelectorAll('.mrow.mine').forEach(r => { const tk = r.querySelector('.tick'); if (!tk || tk.dataset.p === '1') return; const sn = seenByAll(c, +r.dataset.ts), want = sn ? 'checks' : 'check'; tk.classList.toggle('seen', sn); if (tk.dataset.i !== want) { tk.dataset.i = want; tk.innerHTML = ic(want); } });
+}
+const typersOf = c => c.id === 'general' ? [] : (c.members || []).filter(x => x !== me.uid && Date.now() - msOf(c.typing?.[x]) < 8000);
+function sendTyping(on) {
+  const c = curChat(); if (!c || c.id === 'general' || users.get(me.uid)?.hideSeen) return;
+  if (on) { if (Date.now() - typeSent < 4000) return; typeSent = Date.now(); } else typeSent = 0;
+  updateDoc(doc(db, 'chats', c.id), new FieldPath('typing', me.uid), on ? serverTimestamp() : 0).catch(() => {});
+}
 function renderChatHeader() {
   const c = curChat(); if (!c) return;
   $('chatName').textContent = chatTitle(c); $('chatAv').replaceChildren(chatAvatar(c, 'sm'));
@@ -918,7 +958,9 @@ function renderChatHeader() {
   else if (c.type === 'general') s = `${[...users.values()].filter(isOnline).length} online · everyone is here`;
   else s = (c.members || []).map(id => users.get(id)?.displayName?.split(' ')[0]).filter(Boolean).slice(0, 4).join(', ') || `${c.members?.length || 0} members`;
   if (c.type === 'community') s = `${c.members?.length || 0} members` + (c.description ? ' · ' + c.description : '');
-  $('chatStatus').textContent = s;
+  const ty = typersOf(c); clearTimeout(typeT);
+  if (ty.length) { s = c.type === 'dm' ? 'typing…' : ty.length === 1 ? `${(users.get(ty[0])?.displayName || 'Someone').split(' ')[0]} is typing…` : 'Several people are typing…'; typeT = setTimeout(renderChatHeader, 8300); }
+  $('chatStatus').textContent = s; refreshTicks();
   const bp = c.type === 'dm' && blocked.has(otherOf(c));
   $('voiceCall').hidden = $('videoCall').hidden = c.type !== 'dm' || bp; applyBlockUI(c);
   const db_ = $('dispBar'); db_.hidden = !c.disappear; if (c.disappear) db_.innerHTML = ic('clock') + '<span>Disappearing messages are on: ' + dispName(c.disappear) + '</span>';
@@ -1008,7 +1050,7 @@ function startMsgs() {
     if (want.join() !== have.join()) want.forEach(x => list.append(rows.get(x)));
     fixDays(); $('emptyNote').hidden = rows.size > 0;
     if (firstSnap || near || own) box.scrollTop = box.scrollHeight;
-    firstSnap = false; if (curScreen === 'chat' && !document.hidden) markRead(id);
+    refreshTicks(); firstSnap = false; if (curScreen === 'chat' && !document.hidden) markRead(id);
   }, err => { console.error(err); toast('Chat blocked. Publish the Firestore rules from firestore.rules.'); });
 }
 function fixDays() {
@@ -1035,7 +1077,7 @@ function buildRow(id, m, pending) {
     }
   } else { const t = el('div', 'text'); linkify(t, m.text || ''); b.append(t); }
   const ts = m.createdAt?.toDate ? fmtStamp(m.createdAt) : '';
-  const meta = el('div', 'meta'); meta.append(document.createTextNode(ts || 'Sending…')); if (mine) { const tk = el('span', 'tick'); tk.innerHTML = ic(pending ? 'clock' : 'check'); meta.append(tk); } b.append(meta);
+  const meta = el('div', 'meta'); meta.append(document.createTextNode(ts || 'Sending…')); if (mine) { const tk = el('span', 'tick'); tk.innerHTML = ic(pending ? 'clock' : 'check'); tk.dataset.p = pending ? '1' : ''; tk.dataset.i = pending ? 'clock' : 'check'; meta.append(tk); } b.append(meta);
   b.onclick = ev => { if (ev.target.closest('a,audio,video,button,img,.vpt')) return; selectRow(row); };
   wrap.append(b);
   const chips = el('div', 'reactions');
@@ -1103,12 +1145,13 @@ async function sendTo(chatId, data) {
   await addDoc(colFor(chatId), { ...data, uid: me.uid, displayName: myName(), createdAt: serverTimestamp() });
   if (chatId !== 'general') updateDoc(doc(db, 'chats', chatId), { lastText: previewOf(data).slice(0, 120), lastAt: serverTimestamp(), lastUid: me.uid, lastName: myName() }).catch(() => {});
 }
+input.addEventListener('input', () => { if (input.value.trim()) sendTyping(true); });
 form.addEventListener('submit', async e => {
   e.preventDefault(); if (!me || !active) return;
   const text = input.value.trim(); if (!text) return;
   if (text.length > 2000) { alert('Please keep messages under 2,000 characters.'); return; }
   const data = { type: 'text', text }; if (replyTo) data.replyTo = { id: replyTo.id, name: replyTo.name, text: replyTo.text };
-  input.value = ''; input.style.height = 'auto'; setReply(null); syncComposer();
+  input.value = ''; input.style.height = 'auto'; setReply(null); syncComposer(); sendTyping(false);
   try { await sendTo(active.id, data); } catch (er) { console.error(er); input.value = text; syncComposer(); toast(er.code === 'permission-denied' && active?.type === 'dm' ? "You can't message this person right now." : 'Message not sent. Check your connection and Firestore rules.'); }
 });
 $('actionBtn').addEventListener('click', () => { if (rec) return stopRec(true); if (input.value.trim()) return form.requestSubmit(); startRec(); });
@@ -1427,6 +1470,8 @@ function privacyPage() {
     const u = users.get(me.uid) || {};
     b.append(group(
       toggleRow('eye', 'Last seen and online', 'If off, you also cannot see when others were last online', !u.hideSeen, async (on, cb) => { try { await setDoc(doc(db, 'users', me.uid), on ? { hideSeen: false, lastSeen: serverTimestamp() } : { hideSeen: true }, { merge: true }); } catch { toast('Could not save'); cb.checked = !on; } }),
+      toggleRow('users', 'Show me in the People list', 'If off, only people who have your chat link can find you', !u.hidden, async (on, cb) => { try { await setDoc(doc(db, 'users', me.uid), { hidden: !on }, { merge: true }); } catch { toast('Could not save'); cb.checked = !on; } }),
+      navRow('copy', 'Copy my chat link', 'Anyone who opens it can message you', async () => { const url = shareUrl() + '?to=' + me.uid; try { await navigator.clipboard.writeText(url); toast('Your chat link is copied'); } catch { toast(url); } }),
       navRow('ban', 'Blocked accounts', blocked.size ? `${blocked.size} blocked` : 'None', blockedSheet),
       navRow('clock', 'Disappearing messages', 'Default for new chats: ' + dispName(prefs.dispDefault), dispDefaultPage),
       toggleRow('lock', 'App lock (PIN)', 'Ask for a 4-digit PIN when you open Dxel Chat', !!lockCfg, (on, cb) => { toggleLock(on, draw); cb.checked = !!lockCfg; })
@@ -1590,8 +1635,28 @@ const FAQ = [
   ['I forgot my app lock PIN.', 'On the lock screen choose “Forgot PIN”. You will be signed out and the lock removed; sign in again with your email or Google.'],
   ['Are my messages end-to-end encrypted?', 'No. They are protected by account rules on the server, but the server operator can technically access them.']
 ];
+async function testCalls() {
+  await ensureIce(); const pc = new RTCPeerConnection(ICE), seen = { host: 0, srflx: 0, relay: 0 }, errs = [];
+  pc.createDataChannel('t'); pc.onicecandidate = e => { if (e.candidate) seen[e.candidate.type] = (seen[e.candidate.type] || 0) + 1; };
+  pc.onicecandidateerror = e => { if (e.errorCode >= 300) errs.push(e.errorCode + ' ' + (e.url || '')); };
+  await pc.setLocalDescription(await pc.createOffer());
+  await new Promise(r => { const t = setTimeout(r, 10000); pc.onicegatheringstatechange = () => { if (pc.iceGatheringState === 'complete') { clearTimeout(t); r(); } }; });
+  pc.close(); return { seen, errs };
+}
 function helpPage() {
   page(T('help'), (b, draw) => {
+    const tb = el('button', 'btn sec wide', 'Test call connection'); tb.type = 'button'; const tr = el('p', 'para'); tr.style.marginTop = '10px';
+    tb.onclick = async () => {
+      if (!window.RTCPeerConnection) { tr.textContent = 'This browser does not support calls.'; return; }
+      tb.disabled = true; tb.textContent = 'Testing… (up to 10 seconds)'; tr.textContent = '';
+      try {
+        const { seen, errs } = await testCalls();
+        tr.textContent = seen.relay ? `Good: a relay server was reached, so calls should connect even on mobile data. (host ${seen.host}, direct ${seen.srflx}, relay ${seen.relay})`
+          : `No relay server reached (host ${seen.host}, direct ${seen.srflx}, relay 0). Calls may fail on mobile data. ${hasOwnTurn ? 'Your TURN credentials did not work. Check the name and key.' : 'Add free TURN credentials in index.html (see the guide).'}` + (errs.length ? ' Errors: ' + errs.slice(0, 2).join('; ') : '');
+      } catch (e) { tr.textContent = 'Test failed: ' + (e.message || e); }
+      tb.disabled = false; tb.textContent = 'Test call connection';
+    };
+    b.append(tb, tr);
     const g = el('div', 'grp'); FAQ.forEach(([q, a]) => { const d = el('details', 'faq'), s = el('summary', null, q); d.append(s, el('p', null, a)); g.append(d); }); b.append(g);
     b.append(el('div', 'sub', 'Send feedback'));
     let cat = 'Problem'; const cs = el('div', 'chipsel');
@@ -1734,7 +1799,7 @@ function callConnected(c) {
 }
 function callFailed(c, why) {
   if (call !== c || c.connectedAt) return; console.warn('call failed:', why, 'relay candidate seen:', c.relay);
-  toast(c.relay || hasOwnTurn ? 'Could not connect the call. Check both internet connections and try again.' : 'Could not connect: this network blocks direct calls. Ask the app owner to add free TURN credentials.');
+  toast(c.relay || hasOwnTurn ? 'Could not connect the call. Check both internet connections and try again.' : 'Could not connect: this network blocks direct calls. Open Settings, Help and feedback, and run “Test call connection”.');
   endCall(true);
 }
 function armConnectTimeout(c) { clearTimeout(c.ringTimeout); clearTimeout(c.connTimeout); c.connTimeout = setTimeout(() => callFailed(c, 'timeout'), 40000); }
@@ -1769,7 +1834,7 @@ async function startCall(type, peer) {
   catch (e) { call = null; alert(e.name === 'NotAllowedError' ? 'Allow microphone' + (type === 'video' ? ' and camera' : '') + ' access to make calls.' : (e.message || 'Could not access your microphone/camera.')); return; }
   showCallUI(type, peer, 'Calling…'); startRing('out');
   try {
-    await iceReady; c.ref = doc(collection(db, 'calls')); c.id = c.ref.id; const pc = makePC(c);
+    await ensureIce(); c.ref = doc(collection(db, 'calls')); c.id = c.ref.id; const pc = makePC(c);
     pc.onicecandidate = e => { if (e.candidate && call === c) { if (e.candidate.type === 'relay') c.relay = true; addDoc(collection(c.ref, 'callerCandidates'), e.candidate.toJSON()).catch(() => {}); } };
     const offer = await pc.createOffer();
     await setDoc(c.ref, { callerId: me.uid, callerName: myName(), calleeId: peer.id, calleeName: peerName, participants: [me.uid, peer.id], type, status: 'ringing', offer: { type: offer.type, sdp: offer.sdp }, createdAt: serverTimestamp() });
@@ -1788,7 +1853,7 @@ function listenIncoming() {
     pendingIncoming = { id: ch.doc.id, ref: ch.doc.ref, data: d };
     $('incAvatar').replaceChildren(avatar(users.get(d.callerId) || { displayName: d.callerName }, 'xl', false)); $('incName').textContent = d.callerName || 'Someone';
     $('incType').textContent = d.type === 'video' ? 'Incoming video call…' : 'Incoming voice call…'; $('incoming').hidden = false; startRing('in');
-    if ('Notification' in window && Notification.permission === 'granted' && document.hidden) { try { new Notification('Dxel Chat — incoming call', { body: (d.callerName || 'Someone') + ' is calling you', tag: 'call', icon: LOGO }); } catch {} }
+    if (document.hidden) sysNotify('Dxel Chat — incoming call', { body: (d.callerName || 'Someone') + ' is calling you', tag: 'call', requireInteraction: true, vibrate: [300, 150, 300] });
   }), err => console.warn('incoming', err.code));
 }
 function hideIncoming() { $('incoming').hidden = true; pendingIncoming = null; if (!call) stopRing(); }
@@ -1800,7 +1865,7 @@ $('acceptBtn').addEventListener('click', async () => {
   catch { call = null; updateDoc(p.ref, { status: 'declined' }).catch(() => {}); alert('Allow microphone' + (d.type === 'video' ? ' and camera' : '') + ' access to answer calls.'); return; }
   showCallUI(d.type, peer, 'Connecting…');
   try {
-    await iceReady; armConnectTimeout(c); const pc = makePC(c); pc.onicecandidate = e => { if (e.candidate && call === c) { if (e.candidate.type === 'relay') c.relay = true; addDoc(collection(c.ref, 'calleeCandidates'), e.candidate.toJSON()).catch(() => {}); } };
+    await ensureIce(); armConnectTimeout(c); const pc = makePC(c); pc.onicecandidate = e => { if (e.candidate && call === c) { if (e.candidate.type === 'relay') c.relay = true; addDoc(collection(c.ref, 'calleeCandidates'), e.candidate.toJSON()).catch(() => {}); } };
     await pc.setRemoteDescription(d.offer); flushCands(c); const answer = await pc.createAnswer(); await pc.setLocalDescription(answer);
     await updateDoc(c.ref, { answer: { type: answer.type, sdp: answer.sdp }, status: 'active' }); watchCandidates(c, 'callerCandidates'); watchCall(c);
   } catch (e) { console.error(e); toast('Could not connect the call.'); endCall(true); }
@@ -1861,6 +1926,11 @@ $('lockCancel').addEventListener('click', () => { hideLock(); fillSettings(false
 $('lockForgot').addEventListener('click', async () => { if (!confirm('Sign out and remove the app lock? You can sign in again with your email or Google.')) return; lsSet('dxel-lock', null); lockCfg = null; hideLock(); try { await signOut(auth); } catch {} });
 document.addEventListener('visibilitychange', () => { if (document.hidden) hiddenAt = Date.now(); else if (lockCfg && hiddenAt && Date.now() - hiddenAt > 30000 && $('lock').hidden) showLock('unlock', 'Dxel Chat is locked', 'Enter your PIN'); });
 if (lockCfg) showLock('unlock', 'Dxel Chat is locked', 'Enter your PIN');
+function showNotifBar() { $('notifBar').hidden = !('Notification' in window) || Notification.permission !== 'default' || lsGet('dxel-notifask', false); }
+$('notifOn').addEventListener('click', async () => { try { const p = await Notification.requestPermission(); toast(p === 'granted' ? 'Notifications enabled' : 'Notifications blocked'); } catch {} lsSet('dxel-notifask', true); showNotifBar(); });
+$('notifNo').addEventListener('click', () => { lsSet('dxel-notifask', true); showNotifBar(); });
+showNotifBar();
+try { navigator.serviceWorker?.addEventListener('message', e => { const id = e.data?.open; if (id && (id === 'general' || chats.has(id))) openChat(id); }); } catch {}
 setTab('chats'); syncComposer();
 </script>
 </body>
