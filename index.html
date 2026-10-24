@@ -343,7 +343,7 @@ button.srow{width:100%;text-align:left}
   </section>
 </div>
 
-<div class="offbar" id="offBar" hidden>You are offline. Messages will send when you are back online.</div>
+<div class="offbar" id="offBar" hidden>You are offline. You can read saved chats. New messages will send when you are back online.</div>
 <div class="menu" id="menu" hidden></div>
 
 <!-- generic bottom sheet -->
@@ -736,7 +736,7 @@ function teardown() {
   $('chatList').innerHTML = ''; $('people').innerHTML = ''; $('upList').innerHTML = '';
 }
 async function beat() {
-  if (!me) return;
+  if (!me || !navigator.onLine) return;
   const data = { displayName: myName(), email: deleteField(), photoURL: me.photoURL || '' };
   if (!users.get(me.uid)?.hideSeen) data.lastSeen = serverTimestamp();
   try { await setDoc(doc(db, 'users', me.uid), data, { merge: true }); } catch (e) { console.warn('presence', e.code); }
@@ -976,7 +976,7 @@ function closeChatState() { stopMsgs(); if (rec) stopRec(false); active = null; 
 /* ---------- typing + seen ---------- */
 const seenSent = {}, seenTimer = {}; let typeSent = 0, typeT = null;
 function writeSeen(id) {
-  if (id === 'general' || !me || users.get(me.uid)?.hideSeen || !chats.has(id)) return;
+  if (id === 'general' || !me || users.get(me.uid)?.hideSeen || !chats.has(id) || !navigator.onLine) return;
   const wait = 2000 - (Date.now() - (seenSent[id] || 0));
   if (wait > 0) { if (!seenTimer[id]) seenTimer[id] = setTimeout(() => { seenTimer[id] = 0; if (active?.id === id && !document.hidden) writeSeen(id); }, wait); return; }
   seenSent[id] = Date.now(); updateDoc(doc(db, 'chats', id), new FieldPath('seen', me.uid), serverTimestamp()).catch(() => {});
@@ -988,7 +988,7 @@ function refreshTicks() {
 }
 const typersOf = c => c.id === 'general' ? [] : (c.members || []).filter(x => x !== me.uid && Date.now() - msOf(c.typing?.[x]) < 8000);
 function sendTyping(on) {
-  const c = curChat(); if (!c || c.id === 'general' || users.get(me.uid)?.hideSeen) return;
+  const c = curChat(); if (!c || c.id === 'general' || users.get(me.uid)?.hideSeen || !navigator.onLine) return;
   if (on) { if (Date.now() - typeSent < 4000) return; typeSent = Date.now(); } else typeSent = 0;
   updateDoc(doc(db, 'chats', c.id), new FieldPath('typing', me.uid), on ? serverTimestamp() : 0).catch(() => {});
 }
@@ -1280,7 +1280,8 @@ async function sendTo(chatId, data) {
     if (E2E.needRestore || E2E.stale || !E2E.ready) throw Object.assign(new Error('locked'), { code: 'e2e-locked' });
     const sealed = await sealGroup(dc, data); if (sealed) { body = { type: 'enc', ...sealed }; preview = '🔒 Message'; }
   }
-  await addDoc(colFor(chatId), { ...body, ...base });
+  // Offline, Firestore keeps the message on the phone and sends it later, so do not wait for the server forever.
+  await Promise.race([addDoc(colFor(chatId), { ...body, ...base }), new Promise(res => setTimeout(res, navigator.onLine ? 20000 : 600))]);
   if (chatId !== 'general') updateDoc(doc(db, 'chats', chatId), { lastText: preview, lastAt: serverTimestamp(), lastUid: me.uid, lastName: myName() }).catch(() => {});
 }
 input.addEventListener('input', () => { if (input.value.trim()) sendTyping(true); });
@@ -2174,7 +2175,7 @@ $('signOutBtn').addEventListener('click', async () => { if (confirm('Sign out of
 function onNet() { $('offBar').hidden = navigator.onLine; }
 window.addEventListener('online', onNet); window.addEventListener('offline', onNet); onNet();
 applyPrefs();
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js').catch(() => {});
 
 /* ================= CALLS (WebRTC + Firestore signaling) ================= */
 let call = null, pendingIncoming = null, audioCtx = null, ringTimer = null;
@@ -2235,6 +2236,7 @@ function watchCall(c) {
   }));
 }
 async function startCall(type, peer) {
+  if (!navigator.onLine) { toast('You are offline. Calls need the internet.'); return; }
   if (!me || !peer?.id) return; if (blocked.has(peer.id)) { toast('Unblock this person to call them'); return; } if (call || pendingIncoming) { toast('You are already in a call'); return; }
   const peerName = peer.displayName || 'User'; const c = { role: 'caller', type, peer, unsubs: [], pending: [] }; call = c;
   try { c.stream = await getMedia(type); }
