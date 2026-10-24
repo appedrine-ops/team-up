@@ -204,6 +204,48 @@ svg{width:1em;height:1em;display:block}
 .cctl{position:absolute;bottom:max(28px,env(safe-area-inset-bottom));display:flex;gap:16px;z-index:5;flex-wrap:wrap;justify-content:center;padding:0 12px}
 .cbtn{width:50px;height:50px;border-radius:50%;background:#ffffff26;backdrop-filter:blur(8px);font-size:22px;display:grid;place-items:center;color:#fff}.cbtn.off{background:#fff;color:#111}.cbtn.end{background:var(--danger)}
 .callui.audio .vonly{display:none}
+.callui.mini{display:none}
+.callui.video:not(.remote-on) #remoteVideo{opacity:0}
+.callui.nolocal #localVideo{display:none}
+#localVideo.back{transform:none}
+.callui .ctop{display:flex;align-items:center;justify-content:space-between;padding:0 16px;text-shadow:none;background:linear-gradient(#000a,#0000);height:110px;align-items:flex-start;padding-top:max(16px,env(safe-area-inset-top))}
+.callui.video.remote-on .ctop{display:flex}
+.ctitle{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;min-width:0;padding-top:4px}.ctitle strong{font-size:20px;color:#fff;max-width:60vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ctitle span{font-size:14px;color:#fffc}
+.cenc{display:flex;align-items:center;gap:5px;font-size:13px;color:#ffffffb0}.cenc svg{width:13px;height:13px}
+.ccirc{width:46px;height:46px;border-radius:50%;background:#ffffff22;backdrop-filter:blur(8px);display:grid;place-items:center;color:#fff;font-size:20px;flex:none}.ccirc[hidden]{display:block;visibility:hidden}
+.cc h2,.cc p{display:none}
+.callui:not(.remote-on) .cc{margin-top:-120px}
+.cavatar{position:relative;width:196px;height:196px;border-radius:50%;display:grid;place-items:center}
+.cavatar .av{width:196px;height:196px;font-size:80px}
+.callui:not(.connected) .cavatar::after{content:"";position:absolute;inset:-10px;border-radius:50%;border:2px solid #f8dc7e66;animation:cring 1.6s ease-out infinite}
+@keyframes cring{from{transform:scale(.92);opacity:1}to{transform:scale(1.18);opacity:0}}
+.cpanel{position:absolute;left:12px;right:12px;bottom:max(14px,env(safe-area-inset-bottom));z-index:5;background:#101b19ee;border:1px solid #ffffff14;border-radius:30px;padding:22px 12px 18px;display:grid;grid-template-columns:repeat(3,1fr);gap:20px 6px;backdrop-filter:blur(14px)}
+.callui.video.remote-on .cpanel{background:#101b19b8}
+.callui.hidectl .cpanel,.callui.video.remote-on.hidectl .ctop,.callui.hidectl .ctop{display:none}
+.ctile{display:flex;flex-direction:column;align-items:center;gap:8px;color:#fff;font-size:15px}
+.ctile .cbtn{width:68px;height:68px;font-size:27px;background:#ffffff1f}
+.cbtn.on,.cbtn.off{background:#fff;color:#111}.cbtn.end{background:var(--danger);color:#fff}
+.cbtn.dim{opacity:.4}
+.cmore{position:absolute;left:18px;bottom:calc(100% + 8px);background:var(--surf);border:1px solid var(--line);border-radius:18px;padding:8px;min-width:230px;box-shadow:0 12px 34px #000a;z-index:6}
+.cmore button{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:11px 10px;border-radius:12px;font-size:15px;color:var(--ink)}.cmore button:hover{background:var(--chip)}.cmore svg{width:20px;height:20px}
+.callpill{position:fixed;top:max(8px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);z-index:95;background:#16a34a;color:#fff;border-radius:22px;padding:9px 18px;font-size:15px;font-weight:600;display:flex;gap:8px;align-items:center;box-shadow:0 6px 20px #0008}.callpill[hidden]{display:none}.callpill svg{width:17px;height:17px}
+/* video notes */
+.vnote{position:fixed;inset:0;z-index:130;background:#06120e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:20px}
+.vnote[hidden]{display:none}
+.vnx{position:absolute;top:max(14px,env(safe-area-inset-top));left:14px}
+.vncircle{position:relative;width:min(78vw,340px);height:min(78vw,340px);border-radius:50%;padding:5px;background:conic-gradient(#ef4444 calc(var(--p,0)*1%),#ffffff22 0)}
+.vncircle video{width:100%;height:100%;object-fit:cover;border-radius:50%;background:#000;transform:scaleX(-1)}
+.vncircle video.back,.vncircle video.rev{transform:none}
+.vntime{font-size:22px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.vnctl{display:flex;align-items:center;justify-content:center;gap:34px;min-height:84px}
+.vnrec{width:76px;height:76px;border-radius:50%;background:#fff;border:5px solid #ffffff55;display:grid;place-items:center}.vnrec::after{content:"";width:46px;height:46px;border-radius:50%;background:#ef4444;transition:.15s}.vnrec.on::after{width:28px;height:28px;border-radius:8px}
+.vnote .cbtn{width:56px;height:56px;font-size:24px}.vnote .cbtn.send{background:var(--g1);color:var(--onacc);width:76px;height:76px;font-size:30px}
+.vnhint{margin:0;color:var(--mut);font-size:14px;text-align:center;max-width:300px}
+.vnp{position:relative;width:210px;height:210px;border-radius:50%;padding:4px;background:conic-gradient(var(--g1) calc(var(--p,0)*1%),#ffffff22 0);cursor:pointer;display:block}
+.vnp video{width:100%;height:100%;object-fit:cover;border-radius:50%;background:#000;display:block;pointer-events:none}
+.vnp .vnplay{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:44px;pointer-events:none;text-shadow:0 2px 8px #000a}.vnp.on .vnplay{opacity:0}
+.vnp .vnd{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);background:#000a;color:#fff;font-size:12px;padding:2px 9px;border-radius:10px;pointer-events:none}
+.c4{background:linear-gradient(135deg,#f59e0b,#ef4444)}
 .lightbox{background:#000e;z-index:100;cursor:zoom-out}.lightbox img{max-width:100%;max-height:100%;border-radius:10px}
 .toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,20px);background:var(--chip);border:1px solid var(--line);color:var(--ink);padding:11px 16px;border-radius:14px;font-size:14px;opacity:0;pointer-events:none;transition:.2s;z-index:300;max-width:90vw;text-align:center}.toast.show{opacity:1;transform:translate(-50%,0)}
 /* status viewer + composer */
@@ -306,6 +348,7 @@ button.srow{width:100%;text-align:left}
         <button type="button" data-pick="media"><span class="ci c1" data-ic="image"></span>Photo or video</button>
         <button type="button" data-pick="camera"><span class="ci c2" data-ic="camera"></span>Camera</button>
         <button type="button" data-pick="doc"><span class="ci c3" data-ic="file"></span>Document</button>
+        <button type="button" data-pick="vnote"><span class="ci c4" data-ic="video"></span>Video note</button>
       </div>
       <div class="pop emoji" id="emojiPanel" hidden></div>
       <button class="rb attach" type="button" id="attachBtn" aria-label="Attach"></button>
@@ -355,10 +398,12 @@ button.srow{width:100%;text-align:left}
 </div>
 
 <!-- sign in / create account -->
-<div class="overlay auth" id="authOverlay">
+<div class="overlay" id="splash" style="z-index:300;background:var(--bg)" role="status" aria-label="Loading"><div style="text-align:center"><img id="splashLogo" alt="Dxel" style="width:96px;height:96px;border-radius:50%"><p style="color:var(--mut);margin:14px 0 0;font-size:14px">Loading…</p></div></div>
+<div class="overlay auth" id="authOverlay" hidden>
   <section class="acard" aria-labelledby="authTitle">
     <div class="brandrow"><img class="logo" alt="Dxel">Dxel Chat</div>
     <div class="mode" id="authMode"><button type="button" data-mode="in" class="on">Sign in</button><button type="button" data-mode="up">Create account</button></div>
+    <p id="wvHint" hidden style="background:#4a3a00;color:#ffe9a8;border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.45;margin:8px 0">You opened this inside another app (such as WhatsApp). Open the link in <b>Chrome</b> first (menu ⋮, then “Open in Chrome” or “Open in browser”), then sign up. Otherwise you will have to sign in again after installing Dxel Chat.</p>
     <h2 id="authTitle">Welcome back</h2>
     <p id="authSub">Sign in to chat and call.</p>
     <button id="googleBtn" class="gbtn" type="button"><b style="color:#4285f4">G</b> Continue with Google</button>
@@ -391,14 +436,34 @@ button.srow{width:100%;text-align:left}
 <div class="callui" id="callUi">
   <video id="remoteVideo" autoplay playsinline></video>
   <video id="localVideo" autoplay playsinline muted></video>
-  <div class="ctop"><strong id="callTopName"></strong><span id="callTopStatus"></span></div>
-  <div class="cc"><div id="callAvatar"></div><h2 id="callName"></h2><p id="callStatus">Calling…</p></div>
-  <div class="cctl">
-    <button class="cbtn" id="muteBtn" aria-label="Mute microphone" data-ic="mic"></button>
-    <button class="cbtn vonly" id="callCamBtn" aria-label="Turn camera off" data-ic="video"></button>
-    <button class="cbtn vonly" id="screenBtn" aria-label="Share screen" data-ic="monitor"></button>
-    <button class="cbtn end" id="hangBtn" aria-label="End call" data-ic="phoneOff"></button>
+  <div class="ctop" id="cTop">
+    <button class="ccirc" id="callMin" aria-label="Minimise call" data-ic="minimize"></button>
+    <div class="ctitle"><strong id="callTopName"></strong><span id="callTopStatus"></span><div class="cenc"><span data-ic="lock" style="display:inline-flex"></span>Encrypted call</div></div>
+    <button class="ccirc" id="callFlip" aria-label="Switch camera" data-ic="refresh" hidden></button>
   </div>
+  <div class="cc" id="cCenter"><div class="cavatar" id="callAvatar"></div><h2 id="callName"></h2><p id="callStatus">Calling…</p></div>
+  <div class="cpanel" id="cPanel">
+    <div class="cmore" id="cMore" hidden>
+      <button type="button" id="moreFlip"><span data-ic="refresh" style="display:inline-flex"></span>Switch camera</button>
+      <button type="button" id="morePrev"><span data-ic="eye" style="display:inline-flex"></span><span id="morePrevTxt">Hide my video</span></button>
+      <button type="button" id="moreInfo"><span data-ic="info" style="display:inline-flex"></span>Connection info</button>
+    </div>
+    <div class="ctile"><button class="cbtn" id="spkBtn" aria-label="Speaker" data-ic="volume"></button><span>Speaker</span></div>
+    <div class="ctile"><button class="cbtn" id="callCamBtn" aria-label="Video" data-ic="video"></button><span>Video</span></div>
+    <div class="ctile"><button class="cbtn" id="muteBtn" aria-label="Mute microphone" data-ic="mic"></button><span id="muteLbl">Mute</span></div>
+    <div class="ctile"><button class="cbtn" id="moreBtn" aria-label="More" data-ic="more"></button><span>More</span></div>
+    <div class="ctile"><button class="cbtn" id="screenBtn" aria-label="Share screen" data-ic="shareUp"></button><span>Share</span></div>
+    <div class="ctile"><button class="cbtn end" id="hangBtn" aria-label="End call" data-ic="phoneOff"></button><span>End</span></div>
+  </div>
+</div>
+<button class="callpill" id="callPill" hidden><span data-ic="phone" style="display:inline-flex"></span><span id="callPillTxt"></span></button>
+
+<div class="vnote" id="vnote" hidden>
+  <button class="ib vnx" id="vnClose" aria-label="Close" data-ic="x"></button>
+  <div class="vncircle" id="vncircle"><video id="vnPrev" autoplay playsinline muted></video></div>
+  <div class="vntime" id="vnTime">0:00</div>
+  <div class="vnctl"><button class="cbtn" id="vnFlip" aria-label="Switch camera" data-ic="refresh"></button><button class="cbtn" id="vnRetake" aria-label="Record again" data-ic="trash" hidden></button><button class="vnrec" id="vnRec" aria-label="Start recording"></button><button class="cbtn send" id="vnSend" aria-label="Send video note" data-ic="send" hidden></button></div>
+  <p class="vnhint" id="vnHint"></p>
 </div>
 
 <div class="viewer" id="viewer" hidden>
@@ -537,7 +602,11 @@ const P = {
   userPlus: '<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>',
   ban: '<circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>',
   lock: '<rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
-  chevron: '<polyline points="9 18 15 12 9 6"/>'
+  chevron: '<polyline points="9 18 15 12 9 6"/>',
+  refresh: '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
+  minimize: '<polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/>',
+  volume: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',
+  shareUp: '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>'
 };
 const ic = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
 const paintIcons = root => root.querySelectorAll('[data-ic]').forEach(n => { n.innerHTML = ic(n.dataset.ic); });
@@ -707,7 +776,7 @@ $('authForm').addEventListener('submit', async e => {
     if (pw.length < 6) return authFail('Password must be at least 6 characters.');
     if (pw !== $('authConfirm').value) return authFail('The two passwords do not match.');
     setBusy(true);
-    try { const c = await createUserWithEmailAndPassword(auth, email, pw); await updateProfile(c.user, { displayName: nm }); try { await sendEmailVerification(c.user); } catch {} await beat(); }
+    try { const c = await createUserWithEmailAndPassword(auth, email, pw); await updateProfile(c.user, { displayName: nm }); try { await sendEmailVerification(c.user); } catch {} await beat(); if (!matchMedia('(display-mode: standalone)').matches) setTimeout(() => toast(/iphone|ipad/i.test(navigator.userAgent) ? 'Account created. To install: tap Share, then Add to Home Screen. You may need to sign in once more there.' : 'Account created. To install: browser menu, then Install app. You will stay signed in.'), 1500); }
     catch (er) { authFail(authMsg(er)); } finally { setBusy(false); }
   } else {
     if (!pw) return authFail('Please enter your password.');
@@ -721,8 +790,15 @@ $('resetBtn').addEventListener('click', async () => {
 });
 setAuthMode('in');
 
+// Show a loading screen until Firebase tells us whether you are signed in, so a signed-in person never sees the sign-in form.
+$('splashLogo').src = LOGO; let authKnown = false;
+// Apps like WhatsApp open links in their own mini browser. Accounts made there are not shared with Chrome or the installed app.
+const inAppBrowser = /; wv\)|FBAN|FBAV|Instagram|Line\/|MicroMessenger|Snapchat|TikTok/i.test(navigator.userAgent) && !matchMedia('(display-mode: standalone)').matches;
+$('wvHint').hidden = !inAppBrowser;
+const endSplash = () => { $('splash').hidden = true; };
+setTimeout(() => { if (!authKnown) { authKnown = true; endSplash(); if (!me) $('authOverlay').hidden = false; } }, 8000); // slow or offline first start
 onAuthStateChanged(auth, user => {
-  me = user; $('authOverlay').hidden = !!user;
+  authKnown = true; endSplash(); me = user; $('authOverlay').hidden = !!user;
   if (!user) { teardown(); return; }
   $('authPassword').value = ''; $('authConfirm').value = '';
   startSession();
@@ -1081,7 +1157,7 @@ function chatInfo() {
 /* ---------- messages ---------- */
 function stopMsgs() { if (U.msgs) { try { U.msgs(); } catch {} U.msgs = null; } }
 function resetMsgUI() { searchQ = ''; $('csBar').hidden = true; $('list').innerHTML = ''; rows.clear(); msgCache.clear(); selectedRow = null; firstSnap = true; $('emptyNote').hidden = true; }
-const previewOf = m => m.type === 'voice' ? 'Voice note' : m.type === 'file' ? ((m.mimeType || '').startsWith('image/') ? 'Photo' : (m.mimeType || '').startsWith('video/') ? 'Video' : (m.fileName || 'File')) : (m.text || '');
+const previewOf = m => m.type === 'voice' ? 'Voice note' : m.type === 'vnote' ? 'Video note' : m.type === 'file' ? ((m.mimeType || '').startsWith('image/') ? 'Photo' : (m.mimeType || '').startsWith('video/') ? 'Video' : (m.fileName || 'File')) : (m.text || '');
 let msgChain = Promise.resolve();
 function startMsgs() {
   const id = active.id;
@@ -1125,7 +1201,8 @@ function buildRow(id, m, pending) {
   if (m.forwarded) b.append(el('div', 'fwd', '↪ Forwarded'));
   if (m.replyTo) { const q = el('div', 'quote'); q.append(el('b', null, m.replyTo.name || ''), el('span', null, m.replyTo.text || '')); b.append(q); }
   const safe = safeUrl(m.fileUrl);
-  if (m.type === 'voice' && safe) b.append(voicePlayer(m.fileUrl, m.duration));
+  if (m.type === 'vnote' && safe) b.append(vnotePlayer(m.fileUrl, m.duration));
+  else if (m.type === 'voice' && safe) b.append(voicePlayer(m.fileUrl, m.duration));
   else if (m.type === 'file' && safe) {
     const mt = m.mimeType || '';
     if (mt.startsWith('image/')) { const i = document.createElement('img'); i.className = 'media-img'; i.loading = 'lazy'; i.src = m.fileUrl; i.alt = m.fileName || 'Photo'; i.onclick = ev => { ev.stopPropagation(); $('lightboxImg').src = m.fileUrl; $('lightbox').hidden = false; }; b.append(i); }
@@ -1256,6 +1333,17 @@ function voicePlayer(src, dur) {
   w.append(btn, track, time, sp); return w;
 }
 
+function vnotePlayer(src, dur) {
+  const w = el('div', 'vnp'), v = document.createElement('video'), badge = el('span', 'vnd', fmtDur(dur || 0)), pb = el('span', 'vnplay');
+  v.playsInline = true; v.preload = 'metadata'; v.src = src; pb.innerHTML = ic('play'); w.setAttribute('role', 'button'); w.setAttribute('aria-label', 'Play video note');
+  const total = () => (isFinite(v.duration) && v.duration > 0) ? v.duration : (dur || 0);
+  w.onclick = ev => { ev.stopPropagation(); if (v.paused) { if (playingAudio && playingAudio !== v) playingAudio.pause(); playingAudio = v; v.play().catch(() => toast('Cannot play this video note')); } else v.pause(); };
+  v.onplay = () => w.classList.add('on'); v.onpause = () => w.classList.remove('on');
+  v.onended = () => { w.classList.remove('on'); w.style.setProperty('--p', 0); badge.textContent = fmtDur(dur || 0); };
+  v.ontimeupdate = () => { const d = total(); if (d) w.style.setProperty('--p', Math.min(100, v.currentTime / d * 100)); badge.textContent = fmtDur(v.currentTime); };
+  w.append(v, pb, badge); return w;
+}
+
 /* ---------- composer ---------- */
 const form = $('messageForm'), input = $('messageInput');
 function setReply(r) { replyTo = r; $('replyBar').hidden = !r; if (r) { $('replyName').textContent = r.name; $('replyText').textContent = r.text; } }
@@ -1296,7 +1384,7 @@ form.addEventListener('submit', async e => {
 $('actionBtn').addEventListener('click', () => { if (rec) return stopRec(true); if (input.value.trim()) return form.requestSubmit(); startRec(); });
 $('attachBtn').addEventListener('click', e => { e.stopPropagation(); if (rec) return stopRec(false); $('emojiPanel').hidden = true; $('attachMenu').hidden = !$('attachMenu').hidden; });
 $('camBtn').addEventListener('click', () => $('fileCamera').click());
-$('attachMenu').addEventListener('click', e => { const b = e.target.closest('button[data-pick]'); if (!b) return; $('attachMenu').hidden = true; $({ media: 'fileMedia', camera: 'fileCamera', doc: 'fileDoc' }[b.dataset.pick]).click(); });
+$('attachMenu').addEventListener('click', e => { const b = e.target.closest('button[data-pick]'); if (!b) return; $('attachMenu').hidden = true; if (b.dataset.pick === 'vnote') return openVNote(); $({ media: 'fileMedia', camera: 'fileCamera', doc: 'fileDoc' }[b.dataset.pick]).click(); });
 ['fileMedia', 'fileCamera', 'fileDoc'].forEach(id => $(id).addEventListener('change', e => { [...e.target.files].forEach(f => queueUpload(f)); e.target.value = ''; }));
 const EMOJIS = '😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 😉 😍 🥰 😘 😋 😎 🤩 🥳 😏 😌 😴 🤔 🫡 😮 😢 😭 😡 🥺 😱 🤗 🙄 👍 👎 👏 🙌 🙏 💪 👋 ✌️ 🤝 👀 ❤️ 💔 🔥 ✨ 🎉 💯 ✅ ❌ 🚀 📚 💡 🎵 ☕ 🍕 🌍 🌞 🌙'.split(' ');
 EMOJIS.forEach(em => { const b = el('button', null, em); b.type = 'button'; b.onclick = () => { const st = input.selectionStart ?? input.value.length; input.setRangeText(em, st, input.selectionEnd ?? st, 'end'); input.dispatchEvent(new Event('input')); input.focus(); }; $('emojiPanel').append(b); });
@@ -1412,6 +1500,56 @@ async function startRec() {
   } catch { alert('Microphone access was denied or is unavailable. Allow microphone permission in your browser settings.'); }
 }
 function stopRec(send) { if (!rec) return; rec.cancel = !send; if (rec.mr.state !== 'inactive') rec.mr.stop(); }
+
+/* ---------- video notes (round short videos) ---------- */
+let vn = null;
+const vnMax = () => useCloud() ? 60 : 20, vnCap = () => 400 * 1024;
+function vnSet(state) {
+  if (!vn) return; vn.state = state; const idle = state === 'idle', recg = state === 'rec', rev = state === 'review';
+  $('vnFlip').hidden = !idle; $('vnRetake').hidden = !rev; $('vnSend').hidden = !rev; $('vnRec').hidden = rev; $('vnRec').classList.toggle('on', recg); $('vnRec').setAttribute('aria-label', recg ? 'Stop recording' : 'Start recording');
+  $('vnHint').textContent = rev ? 'Tap the video to replay it, then send.' : recg ? 'Recording… tap the button to stop.' : `Tap the red button to record. Up to ${vnMax()} seconds${useCloud() ? '' : ' (free sharing keeps video notes short)'}.`;
+  if (!recg) $('vncircle').style.setProperty('--p', 0);
+}
+async function vnCam() {
+  if (!vn) return; vn.stream?.getTracks().forEach(t => t.stop());
+  try {
+    vn.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: { facingMode: vn.facing, width: { ideal: 480 }, height: { ideal: 480 }, frameRate: { ideal: 24 } } });
+    const v = $('vnPrev'); if (vn.url) { URL.revokeObjectURL(vn.url); vn.url = null; } v.removeAttribute('src'); v.loop = false; v.muted = true; v.srcObject = vn.stream; v.classList.remove('rev'); v.classList.toggle('back', vn.facing === 'environment'); v.play().catch(() => {});
+  } catch { closeVN(); alert('Allow camera and microphone access to record video notes.'); }
+}
+async function openVNote() {
+  if (!active) return; if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) { alert('Video notes need a modern browser over HTTPS.'); return; }
+  vn = { facing: 'user', chatId: active.id, chunks: [], state: 'idle' }; $('vnote').hidden = false; $('vnTime').textContent = '0:00'; vnSet('idle'); await vnCam();
+}
+function closeVN() {
+  if (!vn) { $('vnote').hidden = true; return; } clearInterval(vn.timer); vn.cancel = true; try { if (vn.mr && vn.mr.state !== 'inactive') vn.mr.stop(); } catch {}
+  vn.stream?.getTracks().forEach(t => t.stop()); if (vn.url) URL.revokeObjectURL(vn.url); const v = $('vnPrev'); v.pause(); v.srcObject = null; v.removeAttribute('src'); $('vnote').hidden = true; vn = null;
+}
+function vnStart() {
+  if (!vn?.stream) return; const cloud = useCloud();
+  const mime = ['video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'].find(t => MediaRecorder.isTypeSupported(t)) || '';
+  let mr; try { mr = new MediaRecorder(vn.stream, { ...(mime ? { mimeType: mime } : {}), videoBitsPerSecond: cloud ? 450000 : 110000, audioBitsPerSecond: cloud ? 64000 : 24000 }); } catch { alert('This browser cannot record video notes.'); return; }
+  const r = vn; r.chunks = []; r.size = 0; r.mr = mr; r.start = Date.now(); r.cancel = false;
+  mr.ondataavailable = e => { if (e.data.size) { r.chunks.push(e.data); r.size += e.data.size; } };
+  mr.onstop = () => {
+    clearInterval(r.timer); if (r.cancel || vn !== r) return;
+    const type = (mr.mimeType || mime || 'video/webm').split(';')[0]; r.secs = Math.max(1, Math.round((Date.now() - r.start) / 1000));
+    if (!r.chunks.length || r.secs < 1) { vnSet('idle'); return; }
+    r.blob = new Blob(r.chunks, { type }); r.stream.getTracks().forEach(t => t.stop()); r.url = URL.createObjectURL(r.blob);
+    const v = $('vnPrev'); v.srcObject = null; v.src = r.url; v.muted = false; v.loop = true; v.classList.add('rev'); v.play().catch(() => {}); vnSet('review');
+  };
+  mr.start(250); vnSet('rec');
+  r.timer = setInterval(() => { const s = (Date.now() - r.start) / 1000; $('vnTime').textContent = fmtDur(Math.floor(s)); $('vncircle').style.setProperty('--p', Math.min(100, s / vnMax() * 100)); if (s >= vnMax() || (!cloud && r.size >= vnCap())) vnStop(); }, 200);
+}
+function vnStop() { if (vn?.mr && vn.mr.state !== 'inactive') vn.mr.stop(); }
+$('vnRec').addEventListener('click', () => { if (!vn) return; if (vn.state === 'rec') vnStop(); else if (vn.state === 'idle') vnStart(); });
+$('vnClose').addEventListener('click', closeVN);
+$('vnFlip').addEventListener('click', async () => { if (!vn || vn.state !== 'idle') return; vn.facing = vn.facing === 'user' ? 'environment' : 'user'; await vnCam(); });
+$('vnRetake').addEventListener('click', async () => { if (!vn) return; vn.blob = null; $('vnTime').textContent = '0:00'; vnSet('idle'); await vnCam(); });
+$('vnSend').addEventListener('click', () => {
+  if (!vn?.blob) return; const { blob, secs } = vn; if (!useCloud() && blob.size > INLINE_MAX) { toast('That video note is too big. Record a shorter one.'); return; }
+  const file = new File([blob], `video-note-${Date.now()}.${blob.type.includes('mp4') ? 'mp4' : 'webm'}`, { type: blob.type }); closeVN(); queueUpload(file, 'vnote', { duration: secs });
+});
 
 /* ================= UPDATES (STATUS) ================= */
 const myStatuses = () => statuses.filter(s => s.uid === me.uid);
@@ -2195,15 +2333,25 @@ async function getMedia(type) {
   return navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: type === 'video' ? { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } : false });
 }
 function showCallUI(type, peer, status) {
-  callUi.className = 'callui show ' + type; const name = peer.displayName || 'User';
+  callUi.className = 'callui show ' + type; const name = peer.displayName || 'User'; callName = name;
   $('callName').textContent = $('callTopName').textContent = name; $('callAvatar').replaceChildren(avatar(users.get(peer.id) || peer, 'xl', false)); setCallStatus(status);
-  ['muteBtn', 'callCamBtn', 'screenBtn'].forEach(id => $(id).classList.remove('off')); $('muteBtn').innerHTML = ic('mic'); $('callCamBtn').innerHTML = ic('video');
-  $('screenBtn').hidden = !navigator.mediaDevices?.getDisplayMedia; localV.srcObject = call?.stream || null;
+  ['muteBtn', 'callCamBtn', 'screenBtn', 'spkBtn'].forEach(id => $(id).classList.remove('on', 'off')); $('muteBtn').innerHTML = ic('mic'); $('muteLbl').textContent = 'Mute'; $('cMore').hidden = true; $('callPill').hidden = true;
+  $('callCamBtn').classList.toggle('on', type === 'video'); $('callCamBtn').innerHTML = ic(type === 'video' ? 'video' : 'video');
+  const share = !!navigator.mediaDevices?.getDisplayMedia; $('screenBtn').classList.toggle('dim', !share);
+  const sink = typeof remoteV.setSinkId === 'function'; $('spkBtn').classList.toggle('dim', !sink);
+  localV.srcObject = call?.stream || null; localV.classList.remove('back'); syncCallVideoUi();
 }
-function setCallStatus(t) { $('callStatus').textContent = $('callTopStatus').textContent = t; }
+let callName = '';
+function syncCallVideoUi() {
+  if (!call) return; const vt = call.stream?.getVideoTracks()[0]; callUi.classList.toggle('nolocal', !vt); $('callFlip').hidden = !vt; $('morePrev').hidden = !vt; $('moreFlip').hidden = !vt;
+  $('callCamBtn').classList.toggle('on', !!vt && vt.enabled); $('callCamBtn').innerHTML = ic(vt && !vt.enabled ? 'videoOff' : 'video');
+}
+function setMini(on) { callUi.classList.toggle('mini', on); $('callPill').hidden = !on || !call; if (on) updatePill(); }
+function updatePill() { const t = $('callStatus').textContent; $('callPillTxt').textContent = callName + (t ? ' · ' + t : ''); }
+function setCallStatus(t) { $('callStatus').textContent = $('callTopStatus').textContent = t; if (!$('callPill').hidden) updatePill(); }
 function callConnected(c) {
   if (c.connectedAt) return; c.connectedAt = Date.now(); clearTimeout(c.hintTimeout); stopRing(); clearTimeout(c.ringTimeout); clearTimeout(c.connTimeout);
-  c.timer = setInterval(() => setCallStatus(fmtDur((Date.now() - c.connectedAt) / 1000)), 1000); setCallStatus('Connected');
+  c.timer = setInterval(() => setCallStatus(fmtDur((Date.now() - c.connectedAt) / 1000)), 1000); setCallStatus('Connected'); callUi.classList.add('connected');
 }
 function callFailed(c, why) {
   if (call !== c || c.connectedAt) return; console.warn('call failed:', why, 'relay candidate seen:', c.relay);
@@ -2212,8 +2360,8 @@ function callFailed(c, why) {
 }
 function armConnectTimeout(c) { clearTimeout(c.ringTimeout); clearTimeout(c.connTimeout); clearTimeout(c.hintTimeout); c.hintTimeout = setTimeout(() => { if (call === c && !c.connectedAt) setCallStatus(c.relay ? 'Still connecting… weak network' : 'Still connecting… this network blocks direct calls'); }, 9000); c.connTimeout = setTimeout(() => callFailed(c, 'timeout'), 40000); }
 function makePC(c) {
-  const pc = new RTCPeerConnection(ICE); c.pc = pc; c.relay = false; c.stream.getTracks().forEach(t => pc.addTrack(t, c.stream));
-  pc.ontrack = e => { remoteV.srcObject = e.streams[0] || new MediaStream([e.track]); remoteV.play?.().catch(() => {}); if (e.track.kind === 'video') callUi.classList.add('remote-on'); };
+  const pc = new RTCPeerConnection(ICE); c.pc = pc; c.relay = false; c.stream.getTracks().forEach(t => pc.addTrack(t, c.stream)); armNegotiation(c);
+  pc.ontrack = e => { remoteV.srcObject = e.streams[0] || new MediaStream([e.track]); remoteV.play?.().catch(() => {}); if (e.track.kind === 'video') { callUi.classList.remove('audio'); callUi.classList.add('video', 'remote-on'); c.type = 'video'; syncCallVideoUi(); } };
   const check = () => {
     if (call !== c) return; const s = pc.connectionState, i = pc.iceConnectionState;
     if (s === 'connected' || i === 'connected' || i === 'completed') callConnected(c);
@@ -2228,10 +2376,27 @@ function makePC(c) {
 function addCand(c, cand) { if (!c.pc || !c.pc.remoteDescription) c.pending.push(cand); else c.pc.addIceCandidate(cand).catch(() => {}); }
 function flushCands(c) { c.pending.splice(0).forEach(x => c.pc.addIceCandidate(x).catch(() => {})); }
 function watchCandidates(c, sub) { c.unsubs.push(onSnapshot(collection(c.ref, sub), s => s.docChanges().forEach(ch => { if (ch.type === 'added') addCand(c, new RTCIceCandidate(ch.doc.data())); }))); }
+// Mid-call changes (turning video on in a voice call) are renegotiated through the same call document.
+async function handleNeg(c, n) {
+  try {
+    if (n.type === 'offer') {
+      if (c.pc.signalingState !== 'stable' && c.role === 'caller') return; // simultaneous offers: the caller keeps its own
+      await c.pc.setRemoteDescription({ type: 'offer', sdp: n.sdp }); const a = await c.pc.createAnswer(); await c.pc.setLocalDescription(a);
+      await updateDoc(c.ref, { neg: { by: me.uid, n: n.n + 'a', type: 'answer', sdp: a.sdp } });
+    } else if (n.type === 'answer' && c.pc.signalingState === 'have-local-offer') await c.pc.setRemoteDescription({ type: 'answer', sdp: n.sdp });
+  } catch (e) { console.warn('renegotiate', e); }
+}
+function armNegotiation(c) {
+  c.pc.onnegotiationneeded = async () => {
+    if (!c.connectedAt || !c.ref || call !== c) return;
+    try { const o = await c.pc.createOffer(); if (c.pc.signalingState !== 'stable') return; await c.pc.setLocalDescription(o); await updateDoc(c.ref, { neg: { by: me.uid, n: Date.now() + '', type: 'offer', sdp: o.sdp } }); } catch (e) { console.warn('negotiationneeded', e); }
+  };
+}
 function watchCall(c) {
   c.unsubs.push(onSnapshot(c.ref, async s => {
     const d = s.data(); if (!d || call !== c) return;
     if (c.role === 'caller' && d.answer && !c.pc.currentRemoteDescription) { try { stopRing(); armConnectTimeout(c); setCallStatus('Connecting…'); await c.pc.setRemoteDescription(d.answer); flushCands(c); } catch (e) { console.error(e); } }
+    if (d.neg && d.neg.by !== me.uid && d.neg.n !== c.lastNeg && c.pc?.remoteDescription) { c.lastNeg = d.neg.n; handleNeg(c, d.neg); }
     if (['ended', 'missed', 'declined'].includes(d.status)) endCall(false, d.status);
   }));
 }
@@ -2283,7 +2448,7 @@ function endCall(notifyRemote, remoteStatus) {
   const c = call; if (!c) return; call = null; clearTimeout(c.ringTimeout); clearTimeout(c.connTimeout); clearTimeout(c.hintTimeout); clearTimeout(c.dropTimeout); clearInterval(c.timer); stopRing();
   c.unsubs.forEach(u => { try { u(); } catch {} }); try { c.pc?.close(); } catch {}
   c.stream?.getTracks().forEach(t => t.stop()); c.screen?.getTracks().forEach(t => t.stop());
-  remoteV.srcObject = null; localV.srcObject = null; callUi.className = 'callui';
+  remoteV.srcObject = null; localV.srcObject = null; callUi.className = 'callui'; $('callPill').hidden = true; $('cMore').hidden = true;
   if (notifyRemote && c.ref) {
     const dur = c.connectedAt ? Math.round((Date.now() - c.connectedAt) / 1000) : 0, status = c.connectedAt ? 'ended' : (c.role === 'caller' ? 'missed' : 'declined');
     updateDoc(c.ref, { status, endedAt: serverTimestamp(), duration: dur }).catch(() => {});
@@ -2292,16 +2457,58 @@ function endCall(notifyRemote, remoteStatus) {
   toast(msg + (c.connectedAt ? ' · ' + fmtDur((Date.now() - c.connectedAt) / 1000) : ''));
 }
 $('hangBtn').addEventListener('click', () => endCall(true));
-$('muteBtn').addEventListener('click', () => { if (!call) return; const t = call.stream.getAudioTracks()[0]; if (!t) return; t.enabled = !t.enabled; $('muteBtn').classList.toggle('off', !t.enabled); $('muteBtn').innerHTML = ic(t.enabled ? 'mic' : 'micOff'); });
-$('callCamBtn').addEventListener('click', () => { if (!call) return; const t = call.stream.getVideoTracks()[0]; if (!t) return; t.enabled = !t.enabled; $('callCamBtn').classList.toggle('off', !t.enabled); $('callCamBtn').innerHTML = ic(t.enabled ? 'video' : 'videoOff'); });
+$('muteBtn').addEventListener('click', () => { if (!call) return; const t = call.stream.getAudioTracks()[0]; if (!t) return; t.enabled = !t.enabled; $('muteBtn').classList.toggle('on', !t.enabled); $('muteBtn').innerHTML = ic(t.enabled ? 'mic' : 'micOff'); $('muteLbl').textContent = t.enabled ? 'Mute' : 'Unmute'; });
+$('callCamBtn').addEventListener('click', async () => {
+  if (!call) return; const c = call; const t = c.stream.getVideoTracks()[0];
+  if (t) { t.enabled = !t.enabled; syncCallVideoUi(); return; }
+  // Voice call: turn the camera on and renegotiate, so the other person starts seeing video.
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } }); if (call !== c) { s.getTracks().forEach(x => x.stop()); return; }
+    const nt = s.getVideoTracks()[0]; c.stream.addTrack(nt); c.pc.addTrack(nt, c.stream); c.type = 'video'; callUi.classList.remove('audio'); callUi.classList.add('video'); localV.srcObject = c.stream; syncCallVideoUi();
+  } catch (e) { toast(e.name === 'NotAllowedError' ? 'Allow camera access to turn on video.' : 'Could not turn on the camera.'); }
+});
+$('callFlip').addEventListener('click', () => flipCamera());
+$('moreFlip').addEventListener('click', () => { $('cMore').hidden = true; flipCamera(); });
+async function flipCamera() {
+  const c = call; const t = c?.stream.getVideoTracks()[0]; if (!t) { toast('Turn on video first'); return; }
+  const want = t.getSettings().facingMode === 'environment' ? 'user' : 'environment';
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: want, width: { ideal: 1280 }, height: { ideal: 720 } } }); if (call !== c) { s.getTracks().forEach(x => x.stop()); return; }
+    const nt = s.getVideoTracks()[0]; nt.enabled = t.enabled; const sender = c.pc.getSenders().find(x => x.track === t || x.track?.kind === 'video');
+    if (sender) await sender.replaceTrack(nt); c.stream.removeTrack(t); t.stop(); c.stream.addTrack(nt); localV.srcObject = c.stream; localV.classList.toggle('back', want === 'environment'); syncCallVideoUi();
+  } catch { toast('Could not switch the camera'); }
+}
+$('morePrev').addEventListener('click', () => { $('cMore').hidden = true; const off = localV.style.display !== 'none'; localV.style.display = off ? 'none' : ''; $('morePrevTxt').textContent = off ? 'Show my video' : 'Hide my video'; });
+$('moreInfo').addEventListener('click', async () => {
+  $('cMore').hidden = true; const c = call; if (!c?.pc) return;
+  try {
+    const st = await c.pc.getStats(); let pair = null; st.forEach(r => { if (r.type === 'transport' && r.selectedCandidatePairId) pair = st.get(r.selectedCandidatePairId); }); if (!pair) st.forEach(r => { if (r.type === 'candidate-pair' && r.nominated && r.state === 'succeeded') pair = r; });
+    if (!pair) { toast('Not connected yet'); return; } const l = st.get(pair.localCandidateId), r = st.get(pair.remoteCandidateId), relay = l?.candidateType === 'relay' || r?.candidateType === 'relay';
+    toast((relay ? 'Relayed connection (through the call server)' : 'Direct connection') + (pair.currentRoundTripTime ? ' · ' + Math.round(pair.currentRoundTripTime * 1000) + ' ms delay' : ''));
+  } catch { toast('Connection info is not available on this browser'); }
+});
+$('moreBtn').addEventListener('click', e => { e.stopPropagation(); $('cMore').hidden = !$('cMore').hidden; });
+$('cPanel').addEventListener('click', e => { if (!e.target.closest('#moreBtn,#cMore')) $('cMore').hidden = true; });
+$('callMin').addEventListener('click', () => setMini(true));
+$('callPill').addEventListener('click', () => setMini(false));
+$('spkBtn').addEventListener('click', async () => {
+  if (!call) return; if (typeof remoteV.setSinkId !== 'function') { toast('Your phone chooses the speaker automatically. Use the volume buttons.'); return; }
+  try {
+    const outs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'audiooutput'); if (outs.length < 2) { toast('Your phone chooses the speaker automatically. Use the volume buttons.'); return; }
+    const cur = outs.findIndex(d => d.deviceId === (remoteV.sinkId || 'default')), next = outs[(cur + 1) % outs.length]; await remoteV.setSinkId(next.deviceId);
+    $('spkBtn').classList.toggle('on', /speaker/i.test(next.label)); toast('Audio: ' + (next.label || 'next output'));
+  } catch { toast('Could not change the audio output'); }
+});
+callUi.addEventListener('click', e => { if (callUi.classList.contains('video') && callUi.classList.contains('remote-on') && e.target.closest('#remoteVideo,#cCenter')) callUi.classList.toggle('hidectl'); });
 $('screenBtn').addEventListener('click', async () => {
-  if (!call || call.type !== 'video') return; const sender = call.pc.getSenders().find(s => s.track?.kind === 'video'); if (!sender) return;
+  if (!call) return; if (!navigator.mediaDevices?.getDisplayMedia) { toast('Screen sharing works on computers'); return; }
+  const sender = call.pc.getSenders().find(s => s.track?.kind === 'video'); if (!sender) { toast('Turn on video first, then share your screen.'); return; }
   if (call.screen) { stopShare(); return; }
-  try { const s = await navigator.mediaDevices.getDisplayMedia({ video: true }); const track = s.getVideoTracks()[0]; await sender.replaceTrack(track); call.screen = s; localV.srcObject = s; $('screenBtn').classList.add('off'); track.onended = stopShare; } catch {}
+  try { const s = await navigator.mediaDevices.getDisplayMedia({ video: true }); const track = s.getVideoTracks()[0]; await sender.replaceTrack(track); call.screen = s; localV.srcObject = s; $('screenBtn').classList.add('on'); track.onended = stopShare; } catch {}
 });
 function stopShare() {
   if (!call?.screen) return; const sender = call.pc.getSenders().find(s => s.track?.kind === 'video'); const cam = call.stream.getVideoTracks()[0];
-  if (sender && cam) sender.replaceTrack(cam).catch(() => {}); call.screen.getTracks().forEach(t => t.stop()); call.screen = null; localV.srcObject = call.stream; $('screenBtn').classList.remove('off');
+  if (sender && cam) sender.replaceTrack(cam).catch(() => {}); call.screen.getTracks().forEach(t => t.stop()); call.screen = null; localV.srcObject = call.stream; $('screenBtn').classList.remove('on');
 }
 window.addEventListener('beforeunload', () => { if (call?.ref) updateDoc(call.ref, { status: 'ended' }).catch(() => {}); });
 /* ================= APP LOCK ================= */
