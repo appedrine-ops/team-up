@@ -139,10 +139,19 @@ svg{width:1em;height:1em;display:block}
 .pill textarea{flex:1;min-width:0;border:0;outline:0;resize:none;background:transparent;font-size:calc(16px*var(--fs,1));padding:10px 0;max-height:120px;line-height:1.25}
 .pill textarea::placeholder{color:var(--mut)}
 .incam{width:34px;height:34px;display:grid;place-items:center;font-size:21px;color:var(--mut);flex:none}
-.composer.has .incam,.composer.recording .incam{display:none}
+.composer.has .incam,.composer.recording .incam,.composer.reviewing .incam{display:none}
 .action{color:#fff;border:2.5px solid transparent;background:linear-gradient(#15114d,#15114d) padding-box,linear-gradient(135deg,#a855f7,#3b82f6,#22d3ee) border-box}
 .recbar{display:none;align-items:center;gap:10px;flex:1;font-size:16px}.record-dot{width:11px;height:11px;border-radius:50%;background:#ff4d4f;animation:pulse 1s infinite}@keyframes pulse{50%{opacity:.25}}
-.recording textarea{display:none}.recording .recbar{display:flex}
+.recording textarea,.reviewing textarea{display:none}.recording .recbar{display:flex}
+.revbar{display:none;align-items:center;gap:10px;flex:1;min-width:0}.reviewing .revbar{display:flex}.reviewing .incam{display:none}
+.revplay{width:36px;height:36px;border-radius:50%;background:var(--g1);color:var(--onacc);display:grid;place-items:center;flex:none;font-size:18px}
+.revprog{flex:1;height:5px;border-radius:3px;background:var(--line);overflow:hidden;min-width:40px}.revprog i{display:block;height:100%;width:0;background:var(--g1)}
+#revTime{font-variant-numeric:tabular-nums;font-size:14px;color:var(--mut);flex:none}
+.revonce{width:36px;height:36px;border-radius:50%;background:#ffffff1f;display:grid;place-items:center;flex:none;color:var(--ink);font-size:20px}.revonce.on,.vnote .cbtn.on{background:var(--g1);color:var(--onacc)}
+.once{display:flex;gap:10px;align-items:center;padding:6px 2px;font-size:14px;color:inherit;text-align:left}.once svg{width:26px;height:26px;color:var(--g1);flex:none}.once.done{opacity:.65}
+.onceov{position:fixed;inset:0;z-index:140;background:#000e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff;padding:20px}.onceov .ib{position:absolute;top:max(14px,env(safe-area-inset-top));left:14px;color:#fff}
+.onceround video{width:min(80vw,340px);height:min(80vw,340px);border-radius:50%;object-fit:cover;background:#000;display:block}.oncevoice svg{width:96px;height:96px;color:var(--g1)}.oncenote{font-size:13px;color:#fff9;text-align:center;max-width:280px;margin:0}
+.recstop,.revresume{width:36px;height:36px;border-radius:50%;background:#ffffff1f;display:grid;place-items:center;margin-left:auto;flex:none;font-size:18px;color:var(--ink)}.revresume{margin-left:0;background:#ff4d4f33;color:#ff6b6d}
 .pop{position:absolute;bottom:calc(100% + 8px);left:10px;background:var(--surf);border:1px solid var(--line);border-radius:18px;padding:8px;box-shadow:0 12px 34px #000a;z-index:10;min-width:210px}
 .pop button{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:10px;border-radius:12px;font-size:15px}.pop button:hover{background:var(--chip)}
 .ci{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:none}.ci svg{font-size:19px}.c1{background:linear-gradient(135deg,#8b5cf6,#6366f1)}.c2{background:linear-gradient(135deg,#f43f5e,#ec4899)}.c3{background:linear-gradient(135deg,#3b82f6,#0ea5e9)}
@@ -362,7 +371,8 @@ button.srow{width:100%;text-align:left}
       <button class="rb emo" type="button" id="emojiBtn" aria-label="Emoji" data-ic="smile"></button>
       <div class="pill">
         <textarea id="messageInput" rows="1" data-tp="message" placeholder="Message" aria-label="Write a message"></textarea>
-        <div class="recbar"><span class="record-dot"></span><span id="recTime">0:00</span><span style="color:var(--mut);font-size:14px">Recording…</span></div>
+        <div class="recbar"><span class="record-dot"></span><span id="recTime">0:00</span><span style="color:var(--mut);font-size:14px">Recording…</span><button class="recstop" type="button" id="recStop" aria-label="Pause recording" data-ic="pause"></button></div>
+        <div class="revbar"><button class="revplay" type="button" id="revPlay" aria-label="Play voice note"></button><div class="revprog"><i id="revFill"></i></div><span id="revTime">0:00</span><button class="revonce" type="button" id="revOnce" aria-label="View once" data-ic="once"></button><button class="revresume" type="button" id="revResume" aria-label="Resume recording" data-ic="mic"></button></div>
         <button class="incam" type="button" id="camBtn" aria-label="Take a photo" data-ic="camera"></button>
       </div>
       <button class="rb action" type="button" id="actionBtn" aria-label="Record voice note"></button>
@@ -469,7 +479,7 @@ button.srow{width:100%;text-align:left}
   <button class="ib vnx" id="vnClose" aria-label="Close" data-ic="x"></button>
   <div class="vncircle" id="vncircle"><video id="vnPrev" autoplay playsinline muted></video></div>
   <div class="vntime" id="vnTime">0:00</div>
-  <div class="vnctl"><button class="cbtn" id="vnFlip" aria-label="Switch camera" data-ic="refresh"></button><button class="cbtn" id="vnRetake" aria-label="Record again" data-ic="trash" hidden></button><button class="vnrec" id="vnRec" aria-label="Start recording"></button><button class="cbtn send" id="vnSend" aria-label="Send video note" data-ic="send" hidden></button></div>
+  <div class="vnctl"><button class="cbtn" id="vnFlip" aria-label="Switch camera" data-ic="refresh"></button><button class="cbtn" id="vnRetake" aria-label="Record again" data-ic="trash" hidden></button><button class="cbtn" id="vnOnce" aria-label="View once" data-ic="once" hidden></button><button class="vnrec" id="vnRec" aria-label="Start recording"></button><button class="cbtn send" id="vnSend" aria-label="Send video note" data-ic="send" hidden></button></div>
   <p class="vnhint" id="vnHint"></p>
 </div>
 
@@ -614,6 +624,7 @@ const P = {
   minimize: '<polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/>',
   volume: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',
   bars: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
+  once: '<circle cx="12" cy="12" r="9" stroke-dasharray="3 2.6"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" stroke="none" fill="currentColor">1</text>',
   shareUp: '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>'
 };
 const ic = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
@@ -1164,8 +1175,8 @@ function chatInfo() {
 
 /* ---------- messages ---------- */
 function stopMsgs() { if (U.msgs) { try { U.msgs(); } catch {} U.msgs = null; } }
-function resetMsgUI() { searchQ = ''; $('csBar').hidden = true; $('list').innerHTML = ''; rows.clear(); msgCache.clear(); selectedRow = null; firstSnap = true; $('emptyNote').hidden = true; }
-const previewOf = m => m.type === 'poll' ? '📊 ' + (m.question || 'Poll') : m.type === 'voice' ? 'Voice note' : m.type === 'vnote' ? 'Video note' : m.type === 'file' ? ((m.mimeType || '').startsWith('image/') ? 'Photo' : (m.mimeType || '').startsWith('video/') ? 'Video' : (m.fileName || 'File')) : (m.text || '');
+function resetMsgUI() { if (rec) stopRec(false); searchQ = ''; $('csBar').hidden = true; $('list').innerHTML = ''; rows.clear(); msgCache.clear(); selectedRow = null; firstSnap = true; $('emptyNote').hidden = true; }
+const previewOf = m => m.once ? '🔒 View once ' + (m.type === 'vnote' ? 'video note' : 'voice note') : m.type === 'poll' ? '📊 ' + (m.question || 'Poll') : m.type === 'voice' ? 'Voice note' : m.type === 'vnote' ? 'Video note' : m.type === 'file' ? ((m.mimeType || '').startsWith('image/') ? 'Photo' : (m.mimeType || '').startsWith('video/') ? 'Video' : (m.fileName || 'File')) : (m.text || '');
 let msgChain = Promise.resolve();
 function startMsgs() {
   const id = active.id;
@@ -1210,6 +1221,7 @@ function buildRow(id, m, pending) {
   if (m.replyTo) { const q = el('div', 'quote'); q.append(el('b', null, m.replyTo.name || ''), el('span', null, m.replyTo.text || '')); b.append(q); }
   const safe = safeUrl(m.fileUrl);
   if (m.type === 'poll') b.append(pollView(id, m));
+  else if (m.once && (m.type === 'voice' || m.type === 'vnote') && (safe || mine)) b.append(onceView(id, m, mine));
   else if (m.type === 'vnote' && safe) b.append(vnotePlayer(m.fileUrl, m.duration));
   else if (m.type === 'voice' && safe) b.append(voicePlayer(m.fileUrl, m.duration));
   else if (m.type === 'file' && safe) {
@@ -1263,7 +1275,7 @@ function openEdit(id) {
   });
 }
 function openForward(id) {
-  const m = msgCache.get(id); if (!m) return;
+  const m = msgCache.get(id); if (!m) return; if (m.once) { toast('View once messages cannot be forwarded.'); return; }
   openSheet('Forward to…', b => {
     const list = [...chatEntries(), ...chatEntries(true)]; if (!list.length) b.append(el('p', 'empty', 'No chats yet.'));
     list.forEach(c => {
@@ -1358,10 +1370,11 @@ const form = $('messageForm'), input = $('messageInput');
 function setReply(r) { replyTo = r; $('replyBar').hidden = !r; if (r) { $('replyName').textContent = r.name; $('replyText').textContent = r.text; } }
 $('replyCancel').addEventListener('click', () => setReply(null));
 function syncComposer() {
-  const recording = !!rec, has = !!input.value.trim();
-  form.classList.toggle('recording', recording); form.classList.toggle('has', has);
-  $('actionBtn').innerHTML = ic(recording || has ? 'send' : 'mic'); $('actionBtn').setAttribute('aria-label', recording || has ? 'Send' : 'Record voice note');
-  $('attachBtn').innerHTML = ic(recording ? 'trash' : 'plus'); $('attachBtn').setAttribute('aria-label', recording ? 'Cancel recording' : 'Attach');
+  const recording = !!rec && !rec.paused, reviewing = !!rec && !!rec.paused, has = !!input.value.trim();
+  form.classList.toggle('recording', recording); form.classList.toggle('reviewing', reviewing); form.classList.toggle('has', has);
+  $('revOnce').classList.toggle('on', !!rec?.once); $('revOnce').setAttribute('aria-pressed', rec?.once ? 'true' : 'false');
+  $('actionBtn').innerHTML = ic(recording || reviewing || has ? 'send' : 'mic'); $('actionBtn').setAttribute('aria-label', recording || reviewing || has ? 'Send' : 'Record voice note');
+  $('attachBtn').innerHTML = ic(recording || reviewing ? 'trash' : 'plus'); $('attachBtn').setAttribute('aria-label', recording ? 'Cancel recording' : reviewing ? 'Delete voice note' : 'Attach');
 }
 input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 120) + 'px'; syncComposer(); });
 input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !matchMedia('(pointer:coarse)').matches) { e.preventDefault(); form.requestSubmit(); } });
@@ -1495,20 +1508,64 @@ async function startRec() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
     const mime = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'].find(t => MediaRecorder.isTypeSupported(t)) || '';
     const mr = new MediaRecorder(stream, { ...(mime ? { mimeType: mime } : {}), audioBitsPerSecond: 24000 });
-    const r = { mr, stream, chunks: [], start: Date.now(), cancel: false, timer: null, chatId: active.id }; rec = r;
-    mr.ondataavailable = ev => { if (ev.data.size) r.chunks.push(ev.data); };
+    const r = { mr, stream, chunks: [], segStart: Date.now(), elapsed: 0, paused: false, cancel: false, timer: null, chatId: active.id, mime, preview: null }; rec = r;
+    mr.ondataavailable = ev => { if (ev.data.size) r.chunks.push(ev.data); if (r.paused && r.wantPreview) { r.wantPreview = false; buildPreview(r); } };
     mr.onstop = () => {
-      clearInterval(r.timer); stream.getTracks().forEach(t => t.stop()); rec = null; syncComposer();
-      const secs = Math.round((Date.now() - r.start) / 1000); if (r.cancel || !r.chunks.length || secs < 1) return;
+      clearInterval(r.timer); stream.getTracks().forEach(t => t.stop()); dropPreview(r); if (rec === r) rec = null; syncComposer();
+      const secs = Math.round(r.elapsed / 1000); if (r.cancel || !r.chunks.length || secs < 1) return;
       const type = mr.mimeType || mime || 'audio/webm', ext = type.includes('mp4') ? 'm4a' : type.includes('ogg') ? 'ogg' : 'webm';
       const file = new File([new Blob(r.chunks, { type })], `voice-note-${Date.now()}.${ext}`, { type });
-      uploadChain = uploadChain.then(() => uploadAndShare(file, 'voice', { duration: secs }, r.chatId, null)).catch(() => {});
+      uploadChain = uploadChain.then(() => uploadAndShare(file, 'voice', { duration: secs, ...(r.once ? { once: true } : {}) }, r.chatId, null)).catch(() => {});
     };
-    mr.start(); $('recTime').textContent = '0:00'; syncComposer();
-    r.timer = setInterval(() => { const s = Math.floor((Date.now() - r.start) / 1000); $('recTime').textContent = fmtDur(s); if (s >= (useCloud() ? 300 : 120)) stopRec(true); }, 300);
+    mr.start(); $('recTime').textContent = '0:00'; syncComposer(); runRecTimer(r);
   } catch { alert('Microphone access was denied or is unavailable. Allow microphone permission in your browser settings.'); }
 }
-function stopRec(send) { if (!rec) return; rec.cancel = !send; if (rec.mr.state !== 'inactive') rec.mr.stop(); }
+function runRecTimer(r) {
+  clearInterval(r.timer);
+  r.timer = setInterval(() => { const s = Math.floor((r.elapsed + Date.now() - r.segStart) / 1000); $('recTime').textContent = fmtDur(s); if (s >= (useCloud() ? 300 : 120)) pauseRec(); }, 300);
+}
+/* Pause: stop the clock, then let you listen to what you have so far. Resume adds to the same recording. */
+function pauseRec() {
+  const r = rec; if (!r || r.paused || r.mr.state !== 'recording') return;
+  r.mr.pause(); clearInterval(r.timer); r.elapsed += Date.now() - r.segStart; r.paused = true; r.wantPreview = true; try { r.mr.requestData(); } catch {}
+  $('revFill').style.width = '0'; $('revTime').textContent = fmtDur(Math.round(r.elapsed / 1000)); $('revPlay').innerHTML = ic('play'); syncComposer();
+}
+function resumeRec() {
+  const r = rec; if (!r || !r.paused) return; dropPreview(r); r.paused = false; r.wantPreview = false; r.segStart = Date.now(); r.mr.resume(); runRecTimer(r); syncComposer();
+}
+function buildPreview(r) {
+  dropPreview(r); if (!r.chunks.length) return; const type = r.mr.mimeType || r.mime || 'audio/webm', url = URL.createObjectURL(new Blob(r.chunks, { type })), audio = new Audio(url), secs = Math.max(1, r.elapsed / 1000);
+  r.preview = { url, audio };
+  const paint = () => { const t = audio.currentTime || 0; $('revFill').style.width = Math.min(100, t / secs * 100) + '%'; $('revTime').textContent = fmtDur(audio.paused && t === 0 ? Math.round(secs) : t); };
+  audio.ontimeupdate = paint; audio.onplay = () => { $('revPlay').innerHTML = ic('pause'); }; audio.onpause = () => { $('revPlay').innerHTML = ic('play'); paint(); };
+  audio.onended = () => { audio.currentTime = 0; $('revPlay').innerHTML = ic('play'); $('revFill').style.width = '0'; $('revTime').textContent = fmtDur(Math.round(secs)); };
+}
+function dropPreview(r) { if (r?.preview) { try { r.preview.audio.pause(); } catch {} URL.revokeObjectURL(r.preview.url); r.preview = null; } }
+function stopRec(send) { if (!rec) return; const r = rec; if (!r.paused) r.elapsed += Date.now() - r.segStart; r.cancel = !send; if (r.mr.state !== 'inactive') r.mr.stop(); }
+$('recStop').addEventListener('click', pauseRec);
+$('revResume').addEventListener('click', resumeRec);
+$('revOnce').addEventListener('click', () => { if (!rec) return; rec.once = !rec.once; syncComposer(); toast(rec.once ? 'View once: they can play it one time' : 'Normal voice note'); });
+$('revPlay').addEventListener('click', () => { const p = rec?.preview; if (!p) { toast('Getting your recording ready…'); return; } const a = p.audio; if (a.paused) { if (playingAudio && playingAudio !== a) playingAudio.pause(); playingAudio = a; a.play().catch(() => toast('Cannot play this recording')); } else a.pause(); });
+
+/* ---------- view once ---------- */
+function onceView(id, m, mine) {
+  const kind = m.type === 'vnote' ? 'Video note' : 'Voice note', n = Object.keys(m.viewed || {}).length, seen = mine ? n > 0 : !!m.viewed?.[me.uid];
+  const w = el('button', 'once' + (seen ? ' done' : '')); w.type = 'button'; w.innerHTML = ic('once'); const t = el('span');
+  t.textContent = mine ? `${kind} · View once · ` + (seen ? (active.type === 'dm' ? 'Opened' : 'Opened by ' + n) : 'Not opened yet') : seen ? `${kind} · Opened` : `▶ ${kind} · Tap to play once` + (m.duration ? ' · ' + fmtDur(m.duration) : '');
+  w.append(t); if (!mine && !seen) w.onclick = ev => { ev.stopPropagation(); playOnce(id, m); }; return w;
+}
+async function playOnce(id, m) {
+  if (!safeUrl(m.fileUrl)) { toast('Still getting this ready. Try again in a moment.'); return; }
+  try { await Promise.race([updateDoc(doc(colFor(active.id), id), new FieldPath('viewed', me.uid), Date.now()), new Promise(r => setTimeout(r, 1500))]); }
+  catch (e) { console.warn(e); toast(e.code === 'permission-denied' ? 'Could not open it. Publish the new Firestore rules.' : 'Could not open it. Check your connection.'); return; }
+  if (playingAudio) { try { playingAudio.pause(); } catch {} }
+  const ov = el('div', 'onceov'), x = el('button', 'ib'); x.type = 'button'; x.innerHTML = ic('x'); x.setAttribute('aria-label', 'Close');
+  const media = m.type === 'vnote' ? document.createElement('video') : new Audio(); if (m.type === 'vnote') { media.playsInline = true; media.disablePictureInPicture = true; media.setAttribute('controlslist', 'nodownload noremoteplayback'); } media.src = m.fileUrl;
+  const stage = el('div', m.type === 'vnote' ? 'onceround' : 'oncevoice'); if (m.type === 'vnote') stage.append(media); else stage.innerHTML = ic('once');
+  const note = el('p', 'oncenote', 'This plays once and cannot be opened again. It cannot stop screenshots or a second phone camera.');
+  const close = () => { try { media.pause(); } catch {} ov.remove(); }; media.onended = close; x.onclick = close; ov.append(x, stage, note); document.body.append(ov);
+  media.play().catch(() => { toast('Cannot play this one'); close(); });
+}
 
 /* ---------- polls ---------- */
 function pollView(id, m) {
@@ -1582,7 +1639,7 @@ let vn = null;
 const vnMax = () => useCloud() ? 60 : 20, vnCap = () => 400 * 1024;
 function vnSet(state) {
   if (!vn) return; vn.state = state; const idle = state === 'idle', recg = state === 'rec', rev = state === 'review';
-  $('vnFlip').hidden = !idle; $('vnRetake').hidden = !rev; $('vnSend').hidden = !rev; $('vnRec').hidden = rev; $('vnRec').classList.toggle('on', recg); $('vnRec').setAttribute('aria-label', recg ? 'Stop recording' : 'Start recording');
+  $('vnFlip').hidden = !idle; $('vnOnce').hidden = !rev; $('vnOnce').classList.toggle('on', !!vn.once); $('vnRetake').hidden = !rev; $('vnSend').hidden = !rev; $('vnRec').hidden = rev; $('vnRec').classList.toggle('on', recg); $('vnRec').setAttribute('aria-label', recg ? 'Stop recording' : 'Start recording');
   $('vnHint').textContent = rev ? 'Tap the video to replay it, then send.' : recg ? 'Recording… tap the button to stop.' : `Tap the red button to record. Up to ${vnMax()} seconds${useCloud() ? '' : ' (free sharing keeps video notes short)'}.`;
   if (!recg) $('vncircle').style.setProperty('--p', 0);
 }
@@ -1620,11 +1677,12 @@ function vnStart() {
 function vnStop() { if (vn?.mr && vn.mr.state !== 'inactive') vn.mr.stop(); }
 $('vnRec').addEventListener('click', () => { if (!vn) return; if (vn.state === 'rec') vnStop(); else if (vn.state === 'idle') vnStart(); });
 $('vnClose').addEventListener('click', closeVN);
+$('vnOnce').addEventListener('click', () => { if (!vn) return; vn.once = !vn.once; $('vnOnce').classList.toggle('on', vn.once); toast(vn.once ? 'View once: they can play it one time' : 'Normal video note'); });
 $('vnFlip').addEventListener('click', async () => { if (!vn || vn.state !== 'idle') return; vn.facing = vn.facing === 'user' ? 'environment' : 'user'; await vnCam(); });
 $('vnRetake').addEventListener('click', async () => { if (!vn) return; vn.blob = null; $('vnTime').textContent = '0:00'; vnSet('idle'); await vnCam(); });
 $('vnSend').addEventListener('click', () => {
-  if (!vn?.blob) return; const { blob, secs } = vn; if (!useCloud() && blob.size > INLINE_MAX) { toast('That video note is too big. Record a shorter one.'); return; }
-  const file = new File([blob], `video-note-${Date.now()}.${blob.type.includes('mp4') ? 'mp4' : 'webm'}`, { type: blob.type }); closeVN(); queueUpload(file, 'vnote', { duration: secs });
+  if (!vn?.blob) return; const { blob, secs } = vn, vn_once = !!vn.once; if (!useCloud() && blob.size > INLINE_MAX) { toast('That video note is too big. Record a shorter one.'); return; }
+  const file = new File([blob], `video-note-${Date.now()}.${blob.type.includes('mp4') ? 'mp4' : 'webm'}`, { type: blob.type }); closeVN(); queueUpload(file, 'vnote', { duration: secs, ...(vn_once ? { once: true } : {}) });
 });
 
 /* ================= UPDATES (STATUS) ================= */
@@ -1792,7 +1850,7 @@ async function sealMsg(chat, data) {
   return { enc: { iv: toStore(iv), ct: toStore(ct) }, spub: E2E.pubStr, rpub: theirPub };
 }
 async function openMsg(m, chatId) {
-  const base = { uid: m.uid, displayName: m.displayName, createdAt: m.createdAt, expiresAt: m.expiresAt, reactions: m.reactions, votes: m.votes, edited: m.edited };
+  const base = { uid: m.uid, displayName: m.displayName, createdAt: m.createdAt, expiresAt: m.expiresAt, reactions: m.reactions, votes: m.votes, viewed: m.viewed, edited: m.edited };
   try {
     if (!E2E.ready) throw new Error('locked');
     const key = m.gv ? await groupKeyFor(chats.get(chatId), m.gv) : await sharedKey(m.uid === me.uid ? m.rpub : m.spub);
