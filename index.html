@@ -245,7 +245,12 @@ svg{width:1em;height:1em;display:block}
 .vnp video{width:100%;height:100%;object-fit:cover;border-radius:50%;background:#000;display:block;pointer-events:none}
 .vnp .vnplay{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:44px;pointer-events:none;text-shadow:0 2px 8px #000a}.vnp.on .vnplay{opacity:0}
 .vnp .vnd{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);background:#000a;color:#fff;font-size:12px;padding:2px 9px;border-radius:10px;pointer-events:none}
-.c4{background:linear-gradient(135deg,#f59e0b,#ef4444)}
+.c4{background:linear-gradient(135deg,#f59e0b,#ef4444)}.c5{background:linear-gradient(135deg,#14b8a6,#0ea5e9)}.c6{background:linear-gradient(135deg,#a855f7,#ec4899)}
+.poll{min-width:230px;max-width:290px}.pq{font-weight:600;margin-bottom:8px;overflow-wrap:anywhere}
+.popt{position:relative;display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;padding:9px 12px;border-radius:12px;background:#0004;margin-bottom:6px;overflow:hidden;font-size:14px;color:var(--ink)}
+.popt i{position:absolute;left:0;top:0;bottom:0;background:var(--g1);opacity:.3;transition:width .25s}.popt.mine{outline:2px solid var(--g1)}.popt span,.popt b{position:relative;overflow-wrap:anywhere}
+.pn{display:block;color:var(--ink2);font-size:12px;margin-top:2px}
+.schedrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}.schedrow div{flex:1;min-width:0}.schedrow small{display:block;color:var(--mut)}.schedrow p{margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lightbox{background:#000e;z-index:100;cursor:zoom-out}.lightbox img{max-width:100%;max-height:100%;border-radius:10px}
 .toast{position:fixed;left:50%;bottom:90px;transform:translate(-50%,20px);background:var(--chip);border:1px solid var(--line);color:var(--ink);padding:11px 16px;border-radius:14px;font-size:14px;opacity:0;pointer-events:none;transition:.2s;z-index:300;max-width:90vw;text-align:center}.toast.show{opacity:1;transform:translate(-50%,0)}
 /* status viewer + composer */
@@ -349,6 +354,8 @@ button.srow{width:100%;text-align:left}
         <button type="button" data-pick="camera"><span class="ci c2" data-ic="camera"></span>Camera</button>
         <button type="button" data-pick="doc"><span class="ci c3" data-ic="file"></span>Document</button>
         <button type="button" data-pick="vnote"><span class="ci c4" data-ic="video"></span>Video note</button>
+        <button type="button" data-pick="poll"><span class="ci c5" data-ic="bars"></span>Poll</button>
+        <button type="button" data-pick="sched"><span class="ci c6" data-ic="clock"></span>Schedule message</button>
       </div>
       <div class="pop emoji" id="emojiPanel" hidden></div>
       <button class="rb attach" type="button" id="attachBtn" aria-label="Attach"></button>
@@ -606,6 +613,7 @@ const P = {
   refresh: '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>',
   minimize: '<polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/>',
   volume: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',
+  bars: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
   shareUp: '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>'
 };
 const ic = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
@@ -1157,7 +1165,7 @@ function chatInfo() {
 /* ---------- messages ---------- */
 function stopMsgs() { if (U.msgs) { try { U.msgs(); } catch {} U.msgs = null; } }
 function resetMsgUI() { searchQ = ''; $('csBar').hidden = true; $('list').innerHTML = ''; rows.clear(); msgCache.clear(); selectedRow = null; firstSnap = true; $('emptyNote').hidden = true; }
-const previewOf = m => m.type === 'voice' ? 'Voice note' : m.type === 'vnote' ? 'Video note' : m.type === 'file' ? ((m.mimeType || '').startsWith('image/') ? 'Photo' : (m.mimeType || '').startsWith('video/') ? 'Video' : (m.fileName || 'File')) : (m.text || '');
+const previewOf = m => m.type === 'poll' ? '📊 ' + (m.question || 'Poll') : m.type === 'voice' ? 'Voice note' : m.type === 'vnote' ? 'Video note' : m.type === 'file' ? ((m.mimeType || '').startsWith('image/') ? 'Photo' : (m.mimeType || '').startsWith('video/') ? 'Video' : (m.fileName || 'File')) : (m.text || '');
 let msgChain = Promise.resolve();
 function startMsgs() {
   const id = active.id;
@@ -1201,7 +1209,8 @@ function buildRow(id, m, pending) {
   if (m.forwarded) b.append(el('div', 'fwd', '↪ Forwarded'));
   if (m.replyTo) { const q = el('div', 'quote'); q.append(el('b', null, m.replyTo.name || ''), el('span', null, m.replyTo.text || '')); b.append(q); }
   const safe = safeUrl(m.fileUrl);
-  if (m.type === 'vnote' && safe) b.append(vnotePlayer(m.fileUrl, m.duration));
+  if (m.type === 'poll') b.append(pollView(id, m));
+  else if (m.type === 'vnote' && safe) b.append(vnotePlayer(m.fileUrl, m.duration));
   else if (m.type === 'voice' && safe) b.append(voicePlayer(m.fileUrl, m.duration));
   else if (m.type === 'file' && safe) {
     const mt = m.mimeType || '';
@@ -1260,7 +1269,7 @@ function openForward(id) {
     list.forEach(c => {
       const r = el('button', 'pick'); r.type = 'button'; const info = el('span', 'pinfo'); info.append(el('strong', null, chatTitle(c))); r.append(chatAvatar(c, ''), info);
       r.onclick = async () => {
-        const data = { type: m.type || 'text' }; ['text', 'fileName', 'mimeType', 'fileSize', 'duration'].forEach(k => { if (m[k] != null) data[k] = m[k]; });
+        const data = { type: m.type || 'text' }; ['text', 'fileName', 'mimeType', 'fileSize', 'duration', 'question', 'options'].forEach(k => { if (m[k] != null) data[k] = m[k]; });
         if (m.fileUrl || m.cloudUrl) data.fileUrl = m.cloudUrl || m.fileUrl; if (m.cipher) data.cipher = m.cipher; data.forwarded = true;
         if (m.cipher && !chatEncrypted(c.id)) { toast('This private file can only be forwarded to an encrypted chat.'); return; }
         if (m.e2e && c.id !== 'general' && !chatEncrypted(c.id) && !confirm('That chat is not encrypted. Forward anyway?')) return; if (m.e2e && c.id === 'general' && !confirm('Team chat is not encrypted and everyone can read it. Forward anyway?')) return;
@@ -1384,7 +1393,7 @@ form.addEventListener('submit', async e => {
 $('actionBtn').addEventListener('click', () => { if (rec) return stopRec(true); if (input.value.trim()) return form.requestSubmit(); startRec(); });
 $('attachBtn').addEventListener('click', e => { e.stopPropagation(); if (rec) return stopRec(false); $('emojiPanel').hidden = true; $('attachMenu').hidden = !$('attachMenu').hidden; });
 $('camBtn').addEventListener('click', () => $('fileCamera').click());
-$('attachMenu').addEventListener('click', e => { const b = e.target.closest('button[data-pick]'); if (!b) return; $('attachMenu').hidden = true; if (b.dataset.pick === 'vnote') return openVNote(); $({ media: 'fileMedia', camera: 'fileCamera', doc: 'fileDoc' }[b.dataset.pick]).click(); });
+$('attachMenu').addEventListener('click', e => { const b = e.target.closest('button[data-pick]'); if (!b) return; $('attachMenu').hidden = true; if (b.dataset.pick === 'vnote') return openVNote(); if (b.dataset.pick === 'poll') return openPoll(); if (b.dataset.pick === 'sched') return openSchedule(); $({ media: 'fileMedia', camera: 'fileCamera', doc: 'fileDoc' }[b.dataset.pick]).click(); });
 ['fileMedia', 'fileCamera', 'fileDoc'].forEach(id => $(id).addEventListener('change', e => { [...e.target.files].forEach(f => queueUpload(f)); e.target.value = ''; }));
 const EMOJIS = '😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 😉 😍 🥰 😘 😋 😎 🤩 🥳 😏 😌 😴 🤔 🫡 😮 😢 😭 😡 🥺 😱 🤗 🙄 👍 👎 👏 🙌 🙏 💪 👋 ✌️ 🤝 👀 ❤️ 💔 🔥 ✨ 🎉 💯 ✅ ❌ 🚀 📚 💡 🎵 ☕ 🍕 🌍 🌞 🌙'.split(' ');
 EMOJIS.forEach(em => { const b = el('button', null, em); b.type = 'button'; b.onclick = () => { const st = input.selectionStart ?? input.value.length; input.setRangeText(em, st, input.selectionEnd ?? st, 'end'); input.dispatchEvent(new Event('input')); input.focus(); }; $('emojiPanel').append(b); });
@@ -1500,6 +1509,73 @@ async function startRec() {
   } catch { alert('Microphone access was denied or is unavailable. Allow microphone permission in your browser settings.'); }
 }
 function stopRec(send) { if (!rec) return; rec.cancel = !send; if (rec.mr.state !== 'inactive') rec.mr.stop(); }
+
+/* ---------- polls ---------- */
+function pollView(id, m) {
+  const w = el('div', 'poll'), votes = m.votes || {}, total = Object.keys(votes).length, mineV = votes[me.uid];
+  w.append(el('div', 'pq', m.question || 'Poll'));
+  (m.options || []).forEach((o, i) => {
+    const n = Object.values(votes).filter(v => v === i).length, btn = el('button', 'popt' + (mineV === i ? ' mine' : '')), bar = el('i');
+    btn.type = 'button'; bar.style.width = total ? (n / total * 100) + '%' : '0'; btn.append(bar, el('span', null, o), el('b', null, String(n)));
+    btn.onclick = ev => { ev.stopPropagation(); votePoll(id, i); }; w.append(btn);
+  });
+  w.append(el('small', 'pn', total + (total === 1 ? ' vote' : ' votes') + ' · tap an option to vote, tap again to undo')); return w;
+}
+async function votePoll(id, i) {
+  const cur = msgCache.get(id)?.votes?.[me.uid];
+  try { await updateDoc(doc(colFor(active.id), id), new FieldPath('votes', me.uid), cur === i ? deleteField() : i); } catch (e) { console.warn(e); toast('Could not vote. Publish the new Firestore rules.'); }
+}
+function openPoll() {
+  if (!active) return; const chatId = active.id;
+  openSheet('Create poll', b => {
+    const fld = (label, ph, max) => { const w = el('div', 'field'); w.style.marginTop = '8px'; const l = el('label', null, label), i = document.createElement('input'); i.placeholder = ph; i.maxLength = max; i.autocomplete = 'off'; w.append(l, i); b.append(w); return i; };
+    b.append(para('Ask the group a question and let everyone vote. Good for choosing a time, a place or a decision.'));
+    const q = fld('Question', 'Where should we meet?', 140), opts = [fld('Option 1', 'Option', 60), fld('Option 2', 'Option', 60)];
+    const add = el('button', 'btn ghost wide', 'Add another option'); add.type = 'button'; add.style.marginTop = '10px';
+    add.onclick = () => { if (opts.length >= 6) return; const f = fld('Option ' + (opts.length + 1), 'Option', 60); opts.push(f); b.insertBefore(f.parentNode, add); if (opts.length >= 6) add.hidden = true; f.focus(); };
+    const send = el('button', 'btn wide', 'Send poll'); send.type = 'button'; send.style.marginTop = '10px';
+    send.onclick = async () => {
+      const question = q.value.trim(), options = opts.map(x => x.value.trim()).filter(Boolean);
+      if (!question) { toast('Write the question first'); return; } if (options.length < 2) { toast('Add at least two options'); return; } if (new Set(options).size !== options.length) { toast('Options must be different'); return; }
+      send.disabled = true; try { await sendTo(chatId, { type: 'poll', question, options }); closeSheet(); } catch (e) { console.error(e); toast(e.code === 'e2e-locked' ? 'Unlock your private chats first.' : 'Poll not sent. Check your connection.'); send.disabled = false; }
+    };
+    b.append(add, send); setTimeout(() => q.focus(), 50);
+  });
+}
+/* ---------- scheduled messages (kept on this phone, sent when the app is open at that time) ---------- */
+let sched = [], schedFor = '';
+function ensureSched() { if (me && schedFor !== me.uid) { sched = lsGet('dxel-sched-' + me.uid, []); schedFor = me.uid; } }
+const saveSched = () => { if (me) lsSet('dxel-sched-' + me.uid, sched); };
+async function runSched() {
+  if (!me) return; ensureSched(); if (!sched.length || runSched.busy) return; runSched.busy = true;
+  try {
+    for (const x of sched.filter(y => y.at <= Date.now())) {
+      try { await sendTo(x.chatId, { type: 'text', text: x.text }); sched = sched.filter(y => y.id !== x.id); saveSched(); toast('Scheduled message sent'); }
+      catch (e) { if (e.code === 'e2e-locked') continue; x.fails = (x.fails || 0) + 1; if (x.fails >= 3) { sched = sched.filter(y => y.id !== x.id); toast('A scheduled message could not be sent'); } saveSched(); }
+    }
+  } finally { runSched.busy = false; }
+}
+setInterval(runSched, 10000); document.addEventListener('visibilitychange', () => { if (!document.hidden) runSched(); });
+function openSchedule() {
+  if (!active) return; ensureSched(); const chatId = active.id, chatName = chatTitle(active);
+  openSheet('Schedule a message', b => {
+    const draw = () => {
+      b.innerHTML = ''; b.append(para('Write a message now and choose when it should go to ' + chatName + '. It is sent at that time if Dxel Chat is open, or right away the next time you open it. A free web app cannot wake itself up while closed.'));
+      const ta = el('textarea', 'fbta'); ta.maxLength = 2000; ta.placeholder = 'Your message'; ta.setAttribute('aria-label', 'Message');
+      const pad = n => String(n).padStart(2, '0'), lt = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      const when = document.createElement('input'); when.type = 'datetime-local'; when.value = lt(new Date(Date.now() + 3600e3)); when.min = lt(new Date()); when.className = 'fbta'; when.style.cssText = 'min-height:0;margin-top:8px;padding:12px'; when.setAttribute('aria-label', 'Send at');
+      const go = el('button', 'btn wide', 'Schedule'); go.type = 'button'; go.style.marginTop = '10px';
+      go.onclick = () => {
+        const text = ta.value.trim(), at = new Date(when.value).getTime(); if (!text) { toast('Write a message first'); return; } if (!isFinite(at) || at < Date.now() + 5000) { toast('Choose a time in the future'); return; }
+        sched.push({ id: Date.now() + '-' + Math.random().toString(36).slice(2, 7), chatId, chatName, text, at }); saveSched(); toast('Scheduled'); draw();
+      };
+      b.append(ta, when, go);
+      const mine = sched.filter(x => x.chatId === chatId).sort((a, c) => a.at - c.at);
+      if (mine.length) { b.append(el('div', 'sub', 'Waiting to send')); mine.forEach(x => { const r = el('div', 'schedrow'), d = el('div'), c = el('button', 'cb sm'); c.type = 'button'; c.innerHTML = ic('trash'); c.setAttribute('aria-label', 'Cancel scheduled message'); c.onclick = () => { sched = sched.filter(y => y.id !== x.id); saveSched(); draw(); }; d.append(el('p', null, x.text), el('small', null, new Date(x.at).toLocaleString([], { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }))); r.append(d, c); b.append(r); }); }
+    };
+    draw();
+  });
+}
 
 /* ---------- video notes (round short videos) ---------- */
 let vn = null;
@@ -1716,7 +1792,7 @@ async function sealMsg(chat, data) {
   return { enc: { iv: toStore(iv), ct: toStore(ct) }, spub: E2E.pubStr, rpub: theirPub };
 }
 async function openMsg(m, chatId) {
-  const base = { uid: m.uid, displayName: m.displayName, createdAt: m.createdAt, expiresAt: m.expiresAt, reactions: m.reactions, edited: m.edited };
+  const base = { uid: m.uid, displayName: m.displayName, createdAt: m.createdAt, expiresAt: m.expiresAt, reactions: m.reactions, votes: m.votes, edited: m.edited };
   try {
     if (!E2E.ready) throw new Error('locked');
     const key = m.gv ? await groupKeyFor(chats.get(chatId), m.gv) : await sharedKey(m.uid === me.uid ? m.rpub : m.spub);
@@ -1865,9 +1941,24 @@ function legalPage(kind) {
     b.append(para('This is a plain-language summary and not legal advice. Have it reviewed by a lawyer before a public launch.'));
   });
 }
+function creditsPage() {
+  page('Open-source credits', b => {
+    b.append(para('Dxel Chat is an independent app. It is not connected to, or endorsed by, WhatsApp, Meta or any other messaging company.'));
+    const item = (name, what, lic) => { const d = el('div', 'faq'); d.style.padding = '12px 14px'; const t = el('strong', null, name); d.append(t, el('p', null, what), el('small', null, lic)); d.querySelector('p').style.margin = '4px 0'; return d; };
+    const g = el('div', 'grp'); g.style.marginTop = '10px';
+    g.append(
+      item('Feather icons', 'The simple line icons used throughout the app are based on Feather by Cole Bemis.', 'MIT licence. Copyright (c) 2013-2023 Cole Bemis. Permission is granted, free of charge, to use, copy, modify and distribute the icons, provided this notice is kept. The icons are provided "as is", without warranty of any kind.'),
+      item('Firebase', 'Google Firebase stores your profile and messages and handles sign-in. The Firebase JavaScript SDK is open source.', 'Apache License 2.0. Copyright Google LLC.'),
+      item('Cloudinary', 'An optional free service used to hold large photos, videos and files. Private chats encrypt files before they are uploaded.', 'Service terms apply. Not part of this app’s code.'),
+      item('Call relay (Metered or Cloudflare)', 'An optional free relay that helps calls connect between phones on different networks.', 'Service terms apply. Calls are encrypted between the two phones.'),
+      item('WebRTC and Web Crypto', 'Built into your browser. They carry the calls and do the encryption in this app.', 'Open web standards.')
+    ); b.append(g);
+    b.append(para('Names and logos of other companies belong to their owners.'));
+  });
+}
 function aboutPage() {
   page('About Dxel Chat', b => {
-    b.append(group(navRow('lock', 'Privacy policy', '', () => legalPage('privacy')), navRow('info', 'Terms of use', '', () => legalPage('terms'))));
+    b.append(group(navRow('lock', 'Privacy policy', '', () => legalPage('privacy')), navRow('info', 'Terms of use', '', () => legalPage('terms')), navRow('info', 'Open-source credits', 'Tools Dxel Chat is built with', creditsPage)));
     b.append(group(navRow('trash', 'Delete my account', 'Remove your profile and sign out for good', () => { closeSheet(); deleteAccount(); })));
     b.append(para('Dxel Chat version ' + APP_VERSION));
   });
@@ -2358,7 +2449,7 @@ function callFailed(c, why) {
   toast(c.relay || hasOwnTurn ? 'Could not connect the call. Check both internet connections and try again.' : 'Could not connect: this network blocks direct calls. Open Settings, Help and feedback, and run “Test call connection”.');
   endCall(true);
 }
-function armConnectTimeout(c) { clearTimeout(c.ringTimeout); clearTimeout(c.connTimeout); clearTimeout(c.hintTimeout); c.hintTimeout = setTimeout(() => { if (call === c && !c.connectedAt) setCallStatus(c.relay ? 'Still connecting… weak network' : 'Still connecting… this network blocks direct calls'); }, 9000); c.connTimeout = setTimeout(() => callFailed(c, 'timeout'), 40000); }
+function armConnectTimeout(c) { clearTimeout(c.ringTimeout); clearTimeout(c.connTimeout); clearTimeout(c.hintTimeout); c.hintTimeout = setTimeout(() => { if (call === c && !c.connectedAt) setCallStatus(c.relay ? 'Still connecting… weak network' : hasOwnTurn ? 'Still connecting… this network blocks direct calls' : 'Still connecting… no call server set up'); }, 9000); c.connTimeout = setTimeout(() => callFailed(c, 'timeout'), 40000); }
 function makePC(c) {
   const pc = new RTCPeerConnection(ICE); c.pc = pc; c.relay = false; c.stream.getTracks().forEach(t => pc.addTrack(t, c.stream)); armNegotiation(c);
   pc.ontrack = e => { remoteV.srcObject = e.streams[0] || new MediaStream([e.track]); remoteV.play?.().catch(() => {}); if (e.track.kind === 'video') { callUi.classList.remove('audio'); callUi.classList.add('video', 'remote-on'); c.type = 'video'; syncCallVideoUi(); } };
@@ -2470,22 +2561,31 @@ $('callCamBtn').addEventListener('click', async () => {
 $('callFlip').addEventListener('click', () => flipCamera());
 $('moreFlip').addEventListener('click', () => { $('cMore').hidden = true; flipCamera(); });
 async function flipCamera() {
-  const c = call; const t = c?.stream.getVideoTracks()[0]; if (!t) { toast('Turn on video first'); return; }
-  const want = t.getSettings().facingMode === 'environment' ? 'user' : 'environment';
+  const c = call; const t = c?.stream.getVideoTracks()[0]; if (!t) { toast('Turn on video first'); return; } if (c.flipping) return; c.flipping = true;
+  const was = t.getSettings().facingMode === 'environment' ? 'environment' : 'user', want = was === 'user' ? 'environment' : 'user', enabled = t.enabled;
+  const open = async f => (await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: f }, width: { ideal: 1280 }, height: { ideal: 720 } } })).getVideoTracks()[0];
+  let nt = null;
   try {
-    const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: want, width: { ideal: 1280 }, height: { ideal: 720 } } }); if (call !== c) { s.getTracks().forEach(x => x.stop()); return; }
-    const nt = s.getVideoTracks()[0]; nt.enabled = t.enabled; const sender = c.pc.getSenders().find(x => x.track === t || x.track?.kind === 'video');
-    if (sender) await sender.replaceTrack(nt); c.stream.removeTrack(t); t.stop(); c.stream.addTrack(nt); localV.srcObject = c.stream; localV.classList.toggle('back', want === 'environment'); syncCallVideoUi();
-  } catch { toast('Could not switch the camera'); }
+    // Phones cannot run two cameras at once, so let go of the current one before opening the other.
+    c.stream.removeTrack(t); t.stop();
+    try { nt = await open(want); } catch { nt = await open(was); toast('This phone could not open the other camera'); }
+    if (call !== c) { nt.stop(); return; }
+    nt.enabled = enabled; const sender = c.pc.getSenders().find(x => x.track?.kind === 'video' || (!x.track && x.dtmf === null)) || c.pc.getSenders().find(x => x.track === t);
+    if (sender) await sender.replaceTrack(nt); c.stream.addTrack(nt); localV.srcObject = c.stream; localV.play?.().catch(() => {});
+    const now = nt.getSettings().facingMode; localV.classList.toggle('back', now === 'environment' || (!now && want === 'environment')); syncCallVideoUi();
+  } catch (e) { console.warn('flip', e); toast('Could not switch the camera'); try { if (!c.stream.getVideoTracks().length) { const r = await open(was); c.stream.addTrack(r); const sd = c.pc.getSenders().find(x => !x.track || x.track.kind === 'video'); if (sd) await sd.replaceTrack(r); localV.srcObject = c.stream; syncCallVideoUi(); } } catch {} }
+  finally { c.flipping = false; }
 }
 $('morePrev').addEventListener('click', () => { $('cMore').hidden = true; const off = localV.style.display !== 'none'; localV.style.display = off ? 'none' : ''; $('morePrevTxt').textContent = off ? 'Show my video' : 'Hide my video'; });
 $('moreInfo').addEventListener('click', async () => {
   $('cMore').hidden = true; const c = call; if (!c?.pc) return;
+  const server = hasOwnTurn ? 'Call server: set up' : 'Call server: NOT set up', state = 'Connection: ' + (c.pc.iceConnectionState || c.pc.connectionState);
   try {
     const st = await c.pc.getStats(); let pair = null; st.forEach(r => { if (r.type === 'transport' && r.selectedCandidatePairId) pair = st.get(r.selectedCandidatePairId); }); if (!pair) st.forEach(r => { if (r.type === 'candidate-pair' && r.nominated && r.state === 'succeeded') pair = r; });
-    if (!pair) { toast('Not connected yet'); return; } const l = st.get(pair.localCandidateId), r = st.get(pair.remoteCandidateId), relay = l?.candidateType === 'relay' || r?.candidateType === 'relay';
-    toast((relay ? 'Relayed connection (through the call server)' : 'Direct connection') + (pair.currentRoundTripTime ? ' · ' + Math.round(pair.currentRoundTripTime * 1000) + ' ms delay' : ''));
-  } catch { toast('Connection info is not available on this browser'); }
+    if (!pair) { toast(`Not connected yet. ${server}. Relay found: ${c.relay ? 'yes' : 'no'}. ${state}.` + (!hasOwnTurn && !c.relay ? ' Calls on mobile data need a call server (Settings, Call server).' : '')); return; }
+    const l = st.get(pair.localCandidateId), r = st.get(pair.remoteCandidateId), relay = l?.candidateType === 'relay' || r?.candidateType === 'relay';
+    toast((relay ? 'Relayed connection' : 'Direct connection') + (pair.currentRoundTripTime ? ' · ' + Math.round(pair.currentRoundTripTime * 1000) + ' ms delay' : '') + ' · ' + server);
+  } catch { toast(`${server}. ${state}.`); }
 });
 $('moreBtn').addEventListener('click', e => { e.stopPropagation(); $('cMore').hidden = !$('cMore').hidden; });
 $('cPanel').addEventListener('click', e => { if (!e.target.closest('#moreBtn,#cMore')) $('cMore').hidden = true; });
