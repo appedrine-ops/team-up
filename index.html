@@ -73,9 +73,9 @@ svg{width:1em;height:1em;display:block}
 .bdg{position:absolute;top:2px;left:calc(50% + 8px);min-width:18px;height:18px;border-radius:99px;background:#ef4444;color:#fff;font-size:11px;display:grid;place-items:center;padding:0 5px;font-weight:700}
 .fab{position:absolute;right:18px;bottom:calc(max(12px,env(safe-area-inset-bottom)) + 76px);width:56px;height:56px;border-radius:18px;background:linear-gradient(180deg,var(--g1),var(--g2));color:var(--onacc);display:grid;place-items:center;font-size:26px;box-shadow:0 8px 22px #0007;z-index:5}
 /* avatars */
-.av{width:44px;height:44px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:800;font-size:18px;color:var(--g1);background:var(--avbg);position:relative;user-select:none}
-.av img{width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
-.av.sm{width:34px;height:34px;font-size:14px}.av.lg{width:52px;height:52px;font-size:22px}.av.xl{width:120px;height:120px;font-size:50px}
+.av{width:44px;height:44px;min-width:44px;aspect-ratio:1/1;align-self:center;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:800;font-size:18px;color:var(--g1);background:var(--avbg);position:relative;user-select:none}
+.av img{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover;display:block}
+.av.sm{width:34px;height:34px;min-width:34px;font-size:14px}.av.lg{width:52px;height:52px;min-width:52px;font-size:22px}.av.xl{width:120px;height:120px;min-width:120px;font-size:50px}.av.xxl{width:196px;height:196px;min-width:196px;font-size:80px}
 .av .dot{position:absolute;right:-1px;bottom:-1px;width:14px;height:14px;border-radius:50%;background:var(--teal);border:3px solid var(--card2)}
 .av.sm .dot{width:10px;height:10px;border-width:2px}
 .av.ico{background:linear-gradient(135deg,#1b7a5c,var(--mine2))}.av.ico svg{width:52%;height:52%}
@@ -151,6 +151,14 @@ svg{width:1em;height:1em;display:block}
 .once{display:flex;gap:10px;align-items:center;padding:6px 2px;font-size:14px;color:inherit;text-align:left}.once svg{width:26px;height:26px;color:var(--g1);flex:none}.once.done{opacity:.65}
 .onceov{position:fixed;inset:0;z-index:140;background:#000e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff;padding:20px}.onceov .ib{position:absolute;top:max(14px,env(safe-area-inset-top));left:14px;color:#fff}
 .onceround video{width:min(80vw,340px);height:min(80vw,340px);border-radius:50%;object-fit:cover;background:#000;display:block}.oncevoice svg{width:96px;height:96px;color:var(--g1)}.oncenote{font-size:13px;color:#fff9;text-align:center;max-width:280px;margin:0}
+.pinbar{cursor:pointer;border-bottom:1px solid var(--line)}.pinbar svg{font-size:16px;color:var(--g1)}.pinbar span{min-width:0}
+.postlock{justify-content:center;text-align:center;padding:14px;font-size:14px}.dsload{display:flex;align-items:center;gap:8px;padding:12px 14px;border-radius:12px;background:#0004;color:inherit;font-size:14px;width:100%;text-align:left}.dsload svg{font-size:20px}
+.flash{animation:flash 1.4s}@keyframes flash{0%,60%{background:#facc1544}100%{background:transparent}}
+.pfov{position:fixed;inset:0;z-index:120;background:#000a;display:flex;align-items:center;justify-content:center;padding:20px;animation:pfade .15s}
+@keyframes pfade{from{opacity:0}to{opacity:1}}
+.pfcard{width:min(88vw,340px);background:var(--card);border:1px solid var(--line);border-radius:28px;padding:26px 18px 18px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;box-shadow:0 20px 60px #000a}
+.pfcard h3{margin:10px 0 0;font-size:22px;overflow-wrap:anywhere}.pfcard p{margin:0;color:var(--ink2);font-size:14px;overflow-wrap:anywhere}.pfcard small{color:var(--mut);font-size:13px}
+.pfact{display:flex;justify-content:center;gap:10px;margin-top:16px;width:100%}.pfact button{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border-radius:18px;background:var(--chip);color:var(--g1);font-size:12.5px;border:1px solid var(--line)}.pfact button svg{font-size:24px}.pfact button span{color:var(--ink)}
 .recstop,.revresume{width:36px;height:36px;border-radius:50%;background:#ffffff1f;display:grid;place-items:center;margin-left:auto;flex:none;font-size:18px;color:var(--ink)}.revresume{margin-left:0;background:#ff4d4f33;color:#ff6b6d}
 .pop{position:absolute;bottom:calc(100% + 8px);left:10px;background:var(--surf);border:1px solid var(--line);border-radius:18px;padding:8px;box-shadow:0 12px 34px #000a;z-index:10;min-width:210px}
 .pop button{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:10px;border-radius:12px;font-size:15px}.pop button:hover{background:var(--chip)}
@@ -347,6 +355,7 @@ button.srow{width:100%;text-align:left}
     <div class="dispbar" id="csBar" hidden><input id="csInput" placeholder="Search in this chat (last 100 messages)" aria-label="Search in this chat"><button class="ib" id="csClose" type="button" aria-label="Close search" data-ic="x"></button></div>
     <div class="dispbar" id="encNote" hidden style="cursor:pointer"></div>
     <div class="dispbar" id="dispBar" hidden></div>
+    <div class="dispbar pinbar" id="pinBar" hidden><span data-ic="pin" style="display:inline-flex"></span><span id="pinTxt" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span><button class="ib" id="pinX" type="button" aria-label="Unpin message" hidden data-ic="x"></button></div>
     <div class="msgs" id="messages" aria-live="polite">
       <div id="list"></div>
       <p class="empty" id="emptyNote">No messages yet. Say hello 👋</p>
@@ -357,6 +366,7 @@ button.srow{width:100%;text-align:left}
       <div class="upload-bar" id="uploadBar" hidden><span id="uploadLabel"></span><div class="bar"><i id="uploadFill"></i></div></div>
     </div>
     <div class="blockbar" id="blockBar" hidden><span id="blockTxt"></span><button class="btn sm" id="unblockBtn" type="button">Unblock</button></div>
+    <div class="dispbar postlock" id="postLock" hidden>Only admins can send messages in this group.</div>
     <form class="composer" id="messageForm" autocomplete="off">
       <div class="pop" id="attachMenu" hidden>
         <button type="button" data-pick="media"><span class="ci c1" data-ic="image"></span>Photo or video</button>
@@ -625,6 +635,7 @@ const P = {
   volume: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>',
   bars: '<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>',
   once: '<circle cx="12" cy="12" r="9" stroke-dasharray="3 2.6"/><text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" stroke="none" fill="currentColor">1</text>',
+  pin: '<line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14l-2-8V4H7v5z"/>',
   shareUp: '<path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>'
 };
 const ic = n => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]}</svg>`;
@@ -861,7 +872,7 @@ function startSession() {
       if (first || !known.has(id)) { if (readMap[id] === undefined) { readMap[id] = ms; saveRead(); } known.set(id, ms); }
       else noteIncoming(d);
     });
-    chatsReady = true; renderChats(); if (active) renderChatHeader();
+    chatsReady = true; renderChats(); if (active) { renderChatHeader(); applyChatRules(); }
     if (pendingChat && (pendingChat === 'general' || chats.has(pendingChat))) { const t = pendingChat; pendingChat = null; try { history.replaceState(history.state, '', location.pathname); } catch {} openChat(t); }
   }, err => { console.error(err); toast('Could not load chats. Publish the Firestore rules.'); });
   U.comm = onSnapshot(query(collection(db, 'chats'), where('type', '==', 'community')), snap => {
@@ -896,6 +907,21 @@ const saveRead = () => lsSet('dxel-read-' + me.uid, readMap);
 /* ================= CHATS LIST ================= */
 const otherOf = c => c.members?.find(x => x !== me.uid);
 function chatTitle(c) { if (c.type === 'dm') return users.get(otherOf(c))?.displayName || 'User'; return c.name || 'Chat'; }
+function profileCard(c) {
+  const dm = c.type === 'dm', u = dm ? (users.get(otherOf(c)) || { id: otherOf(c), displayName: chatTitle(c) }) : null;
+  const ov = el('div', 'pfov'), card = el('div', 'pfcard'); ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', chatTitle(c) + ' profile');
+  const big = dm ? avatar(u, 'xxl', false) : chatAvatar(c, 'xxl'); card.append(big, el('h3', null, chatTitle(c)));
+  if (dm) { card.append(el('p', null, u.about || 'Hey there! I am using Dxel Chat'), el('small', null, statusText(u))); }
+  else if (c.type === 'general') card.append(el('p', null, 'Everyone on Dxel Chat'));
+  else card.append(el('p', null, `${c.members?.length || 0} members`), ...(c.description ? [el('small', null, c.description)] : []));
+  const close = () => { ov.remove(); document.removeEventListener('keydown', esc); }, esc = e => { if (e.key === 'Escape') close(); }; document.addEventListener('keydown', esc);
+  const btn = (icon, label, fn) => { const b = el('button'); b.type = 'button'; b.innerHTML = ic(icon); b.append(el('span', null, label)); b.setAttribute('aria-label', label); b.onclick = () => { close(); fn(); }; return b; };
+  const row = el('div', 'pfact');
+  row.append(btn('chat', 'Message', () => openChat(c.id)));
+  if (dm) { row.append(btn('phone', 'Voice', () => startCall('audio', u)), btn('video', 'Video', () => startCall('video', u))); }
+  row.append(btn('info', 'Info', () => { openChat(c.id); setTimeout(chatInfo, 60); })); card.append(row);
+  ov.onclick = e => { if (e.target === ov) close(); }; ov.append(card); document.body.append(ov);
+}
 function chatAvatar(c, size = '') {
   if (c.type === 'dm') return avatar(users.get(otherOf(c)) || { displayName: 'User' }, size);
   if (c.type === 'general') return logoAvatar(size);
@@ -947,7 +973,7 @@ function renderChats() {
     const main = el('div', 'imain'), top = el('div', 'irow'), sub = el('div', 'isub');
     const tm = el('span', 'itime' + (un ? ' new' : '')); if (cprefs.pin[c.id]) tm.append(el('span', 'fl', '📌')); if (cprefs.mute[c.id]) tm.append(el('span', 'fl', '🔕')); tm.append(document.createTextNode(listTime(chatMs(c)))); top.append(el('strong', null, chatTitle(c)), tm);
     sub.append(el('small', un ? 'unread' : '', chatPreview(c))); if (un) sub.append(el('i', 'udot'));
-    main.append(top, sub); b.append(chatAvatar(c, 'lg'), main);
+    main.append(top, sub); const av = chatAvatar(c, 'lg'); av.style.cursor = 'pointer'; av.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); profileCard(c); }); b.append(av, main);
     let lp = null, fired = false; const stopLp = () => clearTimeout(lp);
     b.addEventListener('touchstart', () => { fired = false; lp = setTimeout(() => { fired = true; navigator.vibrate?.(20); chatActions(c); }, 550); }, { passive: true });
     ['touchend', 'touchmove', 'touchcancel'].forEach(ev => b.addEventListener(ev, stopLp, { passive: true }));
@@ -1061,11 +1087,24 @@ function newCommunitySheet() {
 }
 
 /* ================= CHAT SCREEN ================= */
+const isAdmin = (c, uid = me.uid) => !!c && (c.type === 'group' || c.type === 'community') && (c.admins?.length ? c.admins.includes(uid) : c.createdBy === uid);
+const postLocked = c => !!c && (c.type === 'group' || c.type === 'community') && c.postMode === 'admins' && !isAdmin(c);
+function applyChatRules() {
+  const c = curChat(), lock = postLocked(c); form.style.display = lock ? 'none' : ''; $('postLock').hidden = !lock; if (lock && rec) stopRec(false); renderPinned();
+}
+function renderPinned() {
+  const c = curChat(), p = c?.pinned; if (!p?.id || c.type === 'dm' || c.type === 'general') { $('pinBar').hidden = true; return; }
+  const m = msgCache.get(p.id); $('pinTxt').textContent = m && !m.locked ? previewOf(m) : 'Pinned message'; $('pinX').hidden = !isAdmin(c); $('pinBar').hidden = false;
+}
+$('pinBar').addEventListener('click', e => {
+  const c = curChat(); if (!c) return; if (e.target.closest('#pinX')) { updateDoc(doc(db, 'chats', c.id), { pinned: deleteField() }).catch(() => toast('Could not unpin')); return; }
+  const r = rows.get(c.pinned?.id); if (r) { r.scrollIntoView({ block: 'center', behavior: 'smooth' }); r.classList.remove('flash'); void r.offsetWidth; r.classList.add('flash'); } else toast('That message is not in the last 100 messages.');
+});
 const curChat = () => !active ? null : active.id === 'general' ? GENERAL : chats.get(active.id);
 function openChat(id) {
   const c = id === 'general' ? GENERAL : chats.get(id); if (!c) return;
   stopMsgs(); resetMsgUI(); setReply(null); active = { id, type: c.type };
-  markRead(id); go('chat'); renderChatHeader(); startMsgs(); syncComposer();
+  markRead(id); go('chat'); renderChatHeader(); applyChatRules(); startMsgs(); syncComposer();
 }
 function closeChatState() { stopMsgs(); if (rec) stopRec(false); active = null; setReply(null); renderChats(); }
 /* ---------- typing + seen ---------- */
@@ -1154,6 +1193,25 @@ async function leaveChat() {
     await updateDoc(doc(db, 'chats', c.id), upd); chats.delete(c.id); toast('You left ' + c.name); goBack(); renderChats();
   } catch (e) { console.error(e); toast('Could not leave'); }
 }
+async function pinMessage(id) {
+  const c = curChat(); if (!c || !isAdmin(c)) return;
+  try { await updateDoc(doc(db, 'chats', c.id), c.pinned?.id === id ? { pinned: deleteField() } : { pinned: { id, by: me.uid, at: Date.now() } }); toast(c.pinned?.id === id ? 'Unpinned' : 'Pinned to the top'); } catch (e) { console.warn(e); toast('Could not pin. Publish the new Firestore rules.'); }
+}
+function memberActions(c, uid) {
+  const u = users.get(uid) || { id: uid, displayName: 'User' }, adm = isAdmin(c, uid), creator = uid === c.createdBy, base = c.admins?.length ? c.admins : [c.createdBy];
+  openSheet(u.displayName || 'Member', b => {
+    b.append(rowBtn('info', 'View profile', () => { closeSheet(); openPerson(uid); }));
+    if (!creator) b.append(rowBtn('star', adm ? 'Remove as admin' : 'Make admin', async () => { closeSheet(); try { await updateDoc(doc(db, 'chats', c.id), { admins: adm ? base.filter(x => x !== uid) : [...new Set([...base, uid])] }); toast(adm ? 'No longer an admin' : (u.displayName || 'They') + ' is now an admin'); } catch { toast('Could not change. Publish the new Firestore rules.'); } }));
+    if (!creator) b.append(rowBtn('logout', 'Remove from ' + (c.type === 'community' ? 'community' : 'group'), async () => {
+      if (!confirm(`Remove ${u.displayName || 'this person'}?`)) return; closeSheet();
+      try {
+        const rest = (c.members || []).filter(x => x !== uid), upd = { members: arrayRemove(uid) }; if (c.admins?.includes(uid)) upd.admins = c.admins.filter(x => x !== uid);
+        if (c.type === 'group' && c.gk && E2E.ready && rest.length) { const n = (c.gk.cur || 1) + 1, w = await makeWraps(crypto.getRandomValues(new Uint8Array(32)), rest); if (w) { upd['gk.cur'] = n; upd['gk.k.' + n] = w; } }
+        await updateDoc(doc(db, 'chats', c.id), upd); toast('Removed');
+      } catch (e) { console.warn(e); toast('Could not remove. Publish the new Firestore rules.'); }
+    }, 'danger'));
+  });
+}
 function chatInfo() {
   const c = curChat(); if (!c) return;
   openSheet(c.type === 'dm' ? 'Contact info' : c.type === 'general' ? 'Team chat' : c.type === 'community' ? 'Community info' : 'Group info', b => {
@@ -1167,7 +1225,8 @@ function chatInfo() {
     else {
       if (c.description) top.append(el('p', null, c.description)); b.append(top);
       b.append(el('div', 'sub', `${c.members?.length || 0} members`));
-      (c.members || []).forEach(id => { const u = users.get(id) || { id, displayName: 'User' }; const r = el('div', 'pick'); const info = el('span', 'pinfo'); info.append(el('strong', null, (u.displayName || 'User') + (id === me.uid ? ' (You)' : '')), el('small', null, id === c.createdBy ? 'Creator' : (u.about || statusText(u)))); r.append(avatar(u, ''), info); if (id !== me.uid) { r.style.cursor = 'pointer'; r.onclick = () => { closeSheet(); openPerson(id); }; } b.append(r); });
+      (c.members || []).forEach(id => { const u = users.get(id) || { id, displayName: 'User' }; const r = el('div', 'pick'); const info = el('span', 'pinfo'); info.append(el('strong', null, (u.displayName || 'User') + (id === me.uid ? ' (You)' : '')), el('small', null, id === c.createdBy ? 'Creator' : isAdmin(c, id) ? 'Admin' : (u.about || statusText(u)))); r.append(avatar(u, ''), info); if (id !== me.uid) { r.style.cursor = 'pointer'; r.onclick = () => { closeSheet(); if (isAdmin(c)) memberActions(c, id); else openPerson(id); }; } b.append(r); });
+      if (isAdmin(c)) { b.append(el('div', 'sub', 'Admin controls')); b.append(group(toggleRow('lock', 'Only admins can send messages', 'Everyone else can read, react and vote', c.postMode === 'admins', async on => { try { await updateDoc(doc(db, 'chats', c.id), { postMode: on ? 'admins' : 'all' }); toast(on ? 'Only admins can send now' : 'Everyone can send'); } catch { toast('Could not change. Publish the new Firestore rules.'); } }))); b.append(para('Tap a member to make them an admin or remove them. Pin an important message by selecting it and choosing Pin.')); }
       b.append(rowBtn('logout', c.type === 'community' ? 'Leave community' : 'Leave group', () => { closeSheet(); leaveChat(); }, 'danger'));
     }
   });
@@ -1205,12 +1264,13 @@ async function handleMsgs(id, snap) {
   if (want.join() !== have.join()) want.forEach(x => list.append(rows.get(x)));
   fixDays(); $('emptyNote').hidden = rows.size > 0; if (searchQ) applyChatSearch();
   if (firstSnap || near || own) box.scrollTop = box.scrollHeight;
-  refreshTicks(); firstSnap = false; if (curScreen === 'chat' && !document.hidden) markRead(id);
+  refreshTicks(); renderPinned(); firstSnap = false; if (curScreen === 'chat' && !document.hidden) markRead(id);
 }
 function fixDays() {
   const list = $('list'); list.querySelectorAll('.daysep').forEach(n => n.remove()); let last = '';
   [...list.children].forEach(r => { const ts = +r.dataset.ts; if (!ts) return; const d = new Date(ts), k = d.toDateString(); if (k !== last) { last = k; const s = el('div', 'daysep'); s.dataset.t = dayLabel(d); list.insertBefore(s, r); } });
 }
+const loadedMedia = new Set();
 function buildRow(id, m, pending) {
   const mine = m.uid === me.uid, group = active.type !== 'dm';
   const row = el('div', 'mrow' + (mine ? ' mine' : '')); row.dataset.id = id; row.dataset.ts = msOf(m.createdAt) || Date.now();
@@ -1226,7 +1286,8 @@ function buildRow(id, m, pending) {
   else if (m.type === 'voice' && safe) b.append(voicePlayer(m.fileUrl, m.duration));
   else if (m.type === 'file' && safe) {
     const mt = m.mimeType || '';
-    if (mt.startsWith('image/')) { const i = document.createElement('img'); i.className = 'media-img'; i.loading = 'lazy'; i.src = m.fileUrl; i.alt = m.fileName || 'Photo'; i.onclick = ev => { ev.stopPropagation(); $('lightboxImg').src = m.fileUrl; $('lightbox').hidden = false; }; b.append(i); }
+    if (prefs.dataSaver && /^https:/.test(m.fileUrl) && !loadedMedia.has(id) && (mt.startsWith('image/') || mt.startsWith('video/'))) { const ph = el('button', 'dsload'); ph.type = 'button'; ph.innerHTML = ic('download'); ph.append(el('span', null, (mt.startsWith('video/') ? 'Tap to load video' : 'Tap to load photo') + (m.fileSize ? ' · ' + fmtSize(m.fileSize) : ''))); ph.onclick = ev => { ev.stopPropagation(); loadedMedia.add(id); const rw = rows.get(id), mm = msgCache.get(id); if (rw && mm) { const nr = buildRow(id, mm, false); rw.replaceWith(nr); rows.set(id, nr); refreshTicks(); } }; b.append(ph); }
+    else if (mt.startsWith('image/')) { const i = document.createElement('img'); i.className = 'media-img'; i.loading = 'lazy'; i.src = m.fileUrl; i.alt = m.fileName || 'Photo'; i.onclick = ev => { ev.stopPropagation(); $('lightboxImg').src = m.fileUrl; $('lightbox').hidden = false; }; b.append(i); }
     else if (mt.startsWith('video/')) { const v = document.createElement('video'); v.className = 'media-video'; v.controls = true; v.preload = 'metadata'; v.playsInline = true; v.src = m.fileUrl; b.append(v); }
     else {
       const k = fileKind(m); const a = el('a', 'file-card'); a.href = m.fileUrl; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.download = m.fileName || '';
@@ -1249,6 +1310,7 @@ function buildRow(id, m, pending) {
   if (m.text) act.append(mk('copy', 'Copy', async () => { try { await navigator.clipboard.writeText(m.text); toast('Copied'); } catch { toast('Copy not available'); } selectRow(null); }));
   if (mine && m.type === 'text' && !m.locked && !pending) act.append(mk('edit', 'Edit', () => { selectRow(null); openEdit(id); }));
   if (!m.locked && !pending && !m.pendingFile && !m.fileFailed) act.append(mk('forward', 'Forward', () => { selectRow(null); openForward(id); }));
+  if (isAdmin(curChat()) && !m.locked && !pending) act.append(mk('pin', curChat().pinned?.id === id ? 'Unpin' : 'Pin', () => { selectRow(null); pinMessage(id); }));
   act.append(mk('star', isStarred(id) ? 'Unstar' : 'Star', () => { selectRow(null); toggleStar(id); }));
   act.append(mk('trash', 'Delete', () => { selectRow(null); openDelete(id, mine); }));
   wrap.append(act); row.append(wrap); return row;
@@ -1420,7 +1482,7 @@ chatEl.addEventListener('drop', e => { e.preventDefault(); dragDepth = 0; $('dro
 /* ---------- file preparation (free: inline in Firestore, or Cloudinary) ---------- */
 const useCloud = () => !!(CLOUDINARY.cloudName && CLOUDINARY.uploadPreset);
 const readAsDataURL = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(blob); });
-async function shrinkImage(file, maxDim = QUAL[prefs.photoQ][0], maxBytes = QUAL[prefs.photoQ][1]) {
+async function shrinkImage(file, maxDim = QUAL[prefs.dataSaver ? 'low' : prefs.photoQ][0], maxBytes = QUAL[prefs.dataSaver ? 'low' : prefs.photoQ][1]) {
   if (!file.type.startsWith('image/') || file.type === 'image/gif' || file.type === 'image/svg+xml') return file;
   const bmp = await createImageBitmap(file).catch(() => null); if (!bmp) return file;
   let scale = Math.min(1, maxDim / Math.max(bmp.width, bmp.height)), q = .82, blob = null;
@@ -1661,7 +1723,7 @@ function closeVN() {
 function vnStart() {
   if (!vn?.stream) return; const cloud = useCloud();
   const mime = ['video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'].find(t => MediaRecorder.isTypeSupported(t)) || '';
-  let mr; try { mr = new MediaRecorder(vn.stream, { ...(mime ? { mimeType: mime } : {}), videoBitsPerSecond: cloud ? 450000 : 110000, audioBitsPerSecond: cloud ? 64000 : 24000 }); } catch { alert('This browser cannot record video notes.'); return; }
+  let mr; try { mr = new MediaRecorder(vn.stream, { ...(mime ? { mimeType: mime } : {}), videoBitsPerSecond: cloud ? (prefs.dataSaver ? 250000 : 450000) : 110000, audioBitsPerSecond: cloud ? 64000 : 24000 }); } catch { alert('This browser cannot record video notes.'); return; }
   const r = vn; r.chunks = []; r.size = 0; r.mr = mr; r.start = Date.now(); r.cancel = false;
   mr.ondataavailable = e => { if (e.data.size) { r.chunks.push(e.data); r.size += e.data.size; } };
   mr.onstop = () => {
@@ -2024,7 +2086,7 @@ function aboutPage() {
 
 /* ================= PREFERENCES (this device) ================= */
 const APP_VERSION = '2.0';
-const prefs = Object.assign({ theme: 'green', wall: 'none', icon: 'dark', fs: 1, hc: false, rm: false, bold: false, lang: 'en', tone: 'chime', callTone: 'classic', preview: true, sound: true, vibe: true, remind: false, remindMin: 30, photoQ: 'normal', dispDefault: 0 }, lsGet('dxel-prefs', {}));
+const prefs = Object.assign({ theme: 'green', wall: 'none', icon: 'dark', fs: 1, hc: false, rm: false, bold: false, lang: 'en', tone: 'chime', callTone: 'classic', preview: true, sound: true, vibe: true, remind: false, remindMin: 30, dataSaver: false, photoQ: 'normal', dispDefault: 0 }, lsGet('dxel-prefs', {}));
 const savePrefs = () => lsSet('dxel-prefs', prefs);
 const QUAL = { low: [800, 200 * 1024], normal: [1280, INLINE_MAX * .9], high: [1920, INLINE_MAX * .96] };
 const WALLS = {
@@ -2253,6 +2315,8 @@ async function storagePage() {
   try { const e = await navigator.storage?.estimate?.(); if (e?.usage != null) usage = fmtSize(e.usage) + (e.quota ? ' of ' + fmtSize(e.quota) : ''); } catch {}
   page(T('storage'), (b, draw) => {
     b.append(group(kv('Used on this phone', usage || 'Unknown'), kv('Messages loaded now', String(msgCache.size)), kv('Large files (over 600 KB)', CLOUDINARY.cloudName ? 'Enabled (Cloudinary)' : 'Not set up')));
+    b.append(group(toggleRow('download', 'Data saver mode', 'Smaller photos, tap to load pictures and videos, lighter video calls', prefs.dataSaver, on => { setPref('dataSaver', on); toast(on ? 'Data saver is on' : 'Data saver is off'); })));
+    b.append(para('Photos and videos stored in the free database still arrive with the chat. Data saver stops large Cloudinary photos and videos from loading until you tap them.'));
     b.append(el('div', 'sub', 'Photo upload quality')); const g = el('div', 'grp');
     [['low', 'Data saver', 'Smaller photos, less data'], ['normal', 'Standard', 'Good balance'], ['high', 'High', 'Sharper, may be compressed more to fit']].forEach(([k, n, s]) => g.append(radioRow(n, s, prefs.photoQ === k, () => { setPref('photoQ', k); draw(); }))); b.append(g);
     b.append(para('Files and photos you send are stored in your free Firestore database (up to about 600 KB each). Videos and bigger files need the optional free Cloudinary setup.'));
@@ -2479,8 +2543,9 @@ function startRing(kind) { stopRing(); ringOnce(kind); ringTimer = setInterval((
 function stopRing() { clearInterval(ringTimer); ringTimer = null; navigator.vibrate?.(0); }
 async function getMedia(type) {
   if (!navigator.mediaDevices?.getUserMedia) throw new Error('Calls need a modern browser over HTTPS.');
-  return navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: type === 'video' ? { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } : false });
+  return navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }, video: type === 'video' ? { facingMode: 'user', ...vidC() } : false });
 }
+const vidC = () => prefs.dataSaver ? { width: { ideal: 480 }, height: { ideal: 360 }, frameRate: { ideal: 15 } } : { width: { ideal: 1280 }, height: { ideal: 720 } };
 function showCallUI(type, peer, status) {
   callUi.className = 'callui show ' + type; const name = peer.displayName || 'User'; callName = name;
   $('callName').textContent = $('callTopName').textContent = name; $('callAvatar').replaceChildren(avatar(users.get(peer.id) || peer, 'xl', false)); setCallStatus(status);
@@ -2612,7 +2677,7 @@ $('callCamBtn').addEventListener('click', async () => {
   if (t) { t.enabled = !t.enabled; syncCallVideoUi(); return; }
   // Voice call: turn the camera on and renegotiate, so the other person starts seeing video.
   try {
-    const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } }); if (call !== c) { s.getTracks().forEach(x => x.stop()); return; }
+    const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', ...vidC() } }); if (call !== c) { s.getTracks().forEach(x => x.stop()); return; }
     const nt = s.getVideoTracks()[0]; c.stream.addTrack(nt); c.pc.addTrack(nt, c.stream); c.type = 'video'; callUi.classList.remove('audio'); callUi.classList.add('video'); localV.srcObject = c.stream; syncCallVideoUi();
   } catch (e) { toast(e.name === 'NotAllowedError' ? 'Allow camera access to turn on video.' : 'Could not turn on the camera.'); }
 });
@@ -2621,7 +2686,7 @@ $('moreFlip').addEventListener('click', () => { $('cMore').hidden = true; flipCa
 async function flipCamera() {
   const c = call; const t = c?.stream.getVideoTracks()[0]; if (!t) { toast('Turn on video first'); return; } if (c.flipping) return; c.flipping = true;
   const was = t.getSettings().facingMode === 'environment' ? 'environment' : 'user', want = was === 'user' ? 'environment' : 'user', enabled = t.enabled;
-  const open = async f => (await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: f }, width: { ideal: 1280 }, height: { ideal: 720 } } })).getVideoTracks()[0];
+  const open = async f => (await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: f }, ...vidC() } })).getVideoTracks()[0];
   let nt = null;
   try {
     // Phones cannot run two cameras at once, so let go of the current one before opening the other.
