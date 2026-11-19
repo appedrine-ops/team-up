@@ -27,7 +27,7 @@ html.bold body{font-weight:600}
 .vps{margin-left:6px;min-width:36px;padding:3px 7px;border-radius:99px;background:var(--chip);color:var(--ink);font-size:12px;font-weight:700;flex:none}
 #csBar{gap:8px}#csBar input{flex:1;min-width:0;background:var(--field);border:1.5px solid var(--fline);border-radius:99px;padding:7px 14px;outline:0;font-size:14px}
 .itime .fl{margin-right:4px;font-size:12px}
-.dispbar{display:flex;align-items:center;gap:8px;padding:6px 14px;font-size:12.5px;color:var(--mut);background:var(--ov);flex:none}.dispbar svg{font-size:15px;color:var(--teal)}
+.dispbar{display:flex;align-items:center;gap:8px;padding:6px 14px;font-size:12.5px;color:var(--mut);background:var(--ov);flex:none}.dispbar svg{font-size:15px;color:var(--teal)}#encNote.off{background:#4a3b12;color:#ffd98a}#encNote.off svg{color:#ffd98a}
 .offbar{position:fixed;top:0;left:0;right:0;z-index:250;background:#7a5b00;color:#fff;text-align:center;font-size:13px;padding:6px 10px}
 .radio{display:flex;align-items:center;gap:12px;width:100%;padding:13px 4px;border-top:1px solid var(--line);text-align:left}.radio:first-child{border-top:0}
 .radio .rd{width:22px;height:22px;border-radius:50%;border:2px solid var(--fline);display:grid;place-items:center;flex:none}.radio.on .rd{border-color:var(--teal)}.radio.on .rd::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--teal)}
@@ -161,6 +161,8 @@ svg{width:1em;height:1em;display:block}
 .pfact{display:flex;justify-content:center;gap:10px;margin-top:16px;width:100%}.pfact button{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;border-radius:18px;background:var(--chip);color:var(--g1);font-size:12.5px;border:1px solid var(--line)}.pfact button svg{font-size:24px}.pfact button span{color:var(--ink)}
 .recstop,.revresume{width:36px;height:36px;border-radius:50%;background:#ffffff1f;display:grid;place-items:center;margin-left:auto;flex:none;font-size:18px;color:var(--ink)}.revresume{margin-left:0;background:#ff4d4f33;color:#ff6b6d}
 .pop{position:absolute;bottom:calc(100% + 8px);left:10px;background:var(--surf);border:1px solid var(--line);border-radius:18px;padding:8px;box-shadow:0 12px 34px #000a;z-index:10;min-width:210px}
+.pop.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;width:min(340px,calc(100vw - 20px));padding:12px 8px}.pop.grid button{flex-direction:column;gap:6px;text-align:center;font-size:12.5px;padding:8px 2px}.pop.camopt{left:auto;right:10px}.c7{background:linear-gradient(135deg,#10b981,#059669)}.c8{background:linear-gradient(135deg,#0ea5e9,#2563eb)}
+.banner{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:10px;right:10px;max-width:520px;margin:0 auto;z-index:260;display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surf);color:var(--ink);border:1px solid var(--line);border-left:4px solid var(--g2);border-radius:16px;box-shadow:0 12px 34px #000b;transform:translateY(-140%);transition:transform .28s ease;cursor:pointer}.banner.show{transform:none}.banner .av{width:40px;height:40px;flex:none}.banner .bt{display:flex;flex-direction:column;min-width:0}.banner .bt strong{font-size:14.5px}.banner .bt span{font-size:13.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pop button{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:10px;border-radius:12px;font-size:15px}.pop button:hover{background:var(--chip)}
 .ci{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:none}.ci svg{font-size:19px}.c1{background:linear-gradient(135deg,#8b5cf6,#6366f1)}.c2{background:linear-gradient(135deg,#f43f5e,#ec4899)}.c3{background:linear-gradient(135deg,#3b82f6,#0ea5e9)}
 .pop.emoji{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;right:10px;min-width:0;padding:8px 6px}.pop.emoji button{width:auto;padding:6px 0;justify-content:center;font-size:24px}
@@ -368,13 +370,20 @@ button.srow{width:100%;text-align:left}
     <div class="blockbar" id="blockBar" hidden><span id="blockTxt"></span><button class="btn sm" id="unblockBtn" type="button">Unblock</button></div>
     <div class="dispbar postlock" id="postLock" hidden>Only admins can send messages in this group.</div>
     <form class="composer" id="messageForm" autocomplete="off">
-      <div class="pop" id="attachMenu" hidden>
-        <button type="button" data-pick="media"><span class="ci c1" data-ic="image"></span>Photo or video</button>
+      <div class="pop grid" id="attachMenu" hidden>
+        <button type="button" data-pick="media"><span class="ci c1" data-ic="image"></span>Gallery</button>
         <button type="button" data-pick="camera"><span class="ci c2" data-ic="camera"></span>Camera</button>
         <button type="button" data-pick="doc"><span class="ci c3" data-ic="file"></span>Document</button>
         <button type="button" data-pick="vnote"><span class="ci c4" data-ic="video"></span>Video note</button>
+        <button type="button" data-pick="loc"><span class="ci c7" data-ic="pin"></span>Location</button>
+        <button type="button" data-pick="contact"><span class="ci c8" data-ic="user"></span>Contact</button>
         <button type="button" data-pick="poll"><span class="ci c5" data-ic="bars"></span>Poll</button>
-        <button type="button" data-pick="sched"><span class="ci c6" data-ic="clock"></span>Schedule message</button>
+        <button type="button" data-pick="sched"><span class="ci c6" data-ic="clock"></span>Schedule</button>
+      </div>
+      <div class="pop camopt" id="camMenu" hidden>
+        <button type="button" data-cam="photo"><span class="ci c2" data-ic="camera"></span>Take a photo</button>
+        <button type="button" data-cam="video"><span class="ci c4" data-ic="video"></span>Record a video</button>
+        <button type="button" data-cam="vnote"><span class="ci c1" data-ic="video"></span>Video note (round, up to 20 s)</button>
       </div>
       <div class="pop emoji" id="emojiPanel" hidden></div>
       <button class="rb attach" type="button" id="attachBtn" aria-label="Attach"></button>
@@ -383,11 +392,11 @@ button.srow{width:100%;text-align:left}
         <textarea id="messageInput" rows="1" data-tp="message" placeholder="Message" aria-label="Write a message"></textarea>
         <div class="recbar"><span class="record-dot"></span><span id="recTime">0:00</span><span style="color:var(--mut);font-size:14px">Recording…</span><button class="recstop" type="button" id="recStop" aria-label="Pause recording" data-ic="pause"></button></div>
         <div class="revbar"><button class="revplay" type="button" id="revPlay" aria-label="Play voice note"></button><div class="revprog"><i id="revFill"></i></div><span id="revTime">0:00</span><button class="revonce" type="button" id="revOnce" aria-label="View once" data-ic="once"></button><button class="revresume" type="button" id="revResume" aria-label="Resume recording" data-ic="mic"></button></div>
-        <button class="incam" type="button" id="camBtn" aria-label="Take a photo" data-ic="camera"></button>
+        <button class="incam" type="button" id="camBtn" aria-label="Camera" data-ic="camera"></button>
       </div>
       <button class="rb action" type="button" id="actionBtn" aria-label="Record voice note"></button>
       <input type="file" id="fileMedia" hidden multiple accept="image/*,video/*">
-      <input type="file" id="fileCamera" hidden accept="image/*,video/*" capture="environment">
+      <input type="file" id="fileCamera" hidden accept="image/*" capture="environment"><input type="file" id="fileCamVid" hidden accept="video/*" capture="environment">
       <input type="file" id="fileDoc" hidden multiple accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx,.csv,.zip,.rtf,audio/*">
     </form>
   </section>
@@ -521,6 +530,10 @@ button.srow{width:100%;text-align:left}
 </div>
 <div class="toast" id="toast" role="status"></div>
 
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/13.0.0/firebase-firestore.js">
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, updateProfile, signOut, sendPasswordResetEmail, sendEmailVerification, deleteUser } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
@@ -761,7 +774,7 @@ function rowBtn(icon, label, fn, cls = '') { const b = el('button', 'dbtn ' + cl
 document.addEventListener('click', e => {
   if (!e.target.closest('#menu,#hdrMenu,#chatMenu')) closeMenu();
   if (selectedRow && !e.target.closest('.mrow')) selectRow(null);
-  if (!e.target.closest('#attachMenu,#attachBtn')) $('attachMenu').hidden = true;
+  if (!e.target.closest('#attachMenu,#attachBtn')) $('attachMenu').hidden = true; if (!e.target.closest('#camMenu,#camBtn')) $('camMenu').hidden = true;
   if (!e.target.closest('#emojiPanel,#emojiBtn')) $('emojiPanel').hidden = true;
 });
 $('lightbox').addEventListener('click', () => { $('lightbox').hidden = true; });
@@ -826,9 +839,12 @@ $('splashLogo').src = LOGO; let authKnown = false;
 const inAppBrowser = /; wv\)|FBAN|FBAV|Instagram|Line\/|MicroMessenger|Snapchat|TikTok/i.test(navigator.userAgent) && !matchMedia('(display-mode: standalone)').matches;
 $('wvHint').hidden = !inAppBrowser;
 const endSplash = () => { $('splash').hidden = true; };
-setTimeout(() => { if (!authKnown) { authKnown = true; endSplash(); if (!me) $('authOverlay').hidden = false; } }, 8000); // slow or offline first start
+const hadUser = (() => { try { return localStorage.getItem('dxel-had-user') === '1'; } catch { return false; } })();
+// Returning people wait longer before we ever show the sign-in form (slow networks used to trigger it by mistake)
+setTimeout(() => { if (!authKnown) { authKnown = true; endSplash(); if (!me) $('authOverlay').hidden = false; } }, hadUser ? 40000 : 8000);
 onAuthStateChanged(auth, user => {
   authKnown = true; endSplash(); me = user; $('authOverlay').hidden = !!user;
+  try { if (user) localStorage.setItem('dxel-had-user', '1'); } catch {}
   if (!user) { teardown(); return; }
   $('authPassword').value = ''; $('authConfirm').value = '';
   startSession();
@@ -842,11 +858,12 @@ function teardown() {
   $('chatList').innerHTML = ''; $('people').innerHTML = ''; $('upList').innerHTML = '';
 }
 async function beat() {
-  if (!me || !navigator.onLine) return;
+  if (!me || !navigator.onLine || document.hidden) return;
   const data = { displayName: myName(), email: deleteField(), photoURL: me.photoURL || '' };
   if (!users.get(me.uid)?.hideSeen) data.lastSeen = serverTimestamp();
   try { await setDoc(doc(db, 'users', me.uid), data, { merge: true }); } catch (e) { console.warn('presence', e.code); }
 }
+let _usT = 0;
 function startSession() {
   readMap = lsGet('dxel-read-' + me.uid, {}); seenMap = lsGet('dxel-seen-' + me.uid, {});
   hiddenIds = new Set([...lsGet('dxel-hidden-' + me.uid, []), ...lsGet('teamup-hidden-' + me.uid, [])]);
@@ -854,13 +871,13 @@ function startSession() {
   cprefs = Object.assign({ pin: {}, mute: {}, arch: {} }, lsGet('dxel-cprefs-' + me.uid, {})); stars = lsGet('dxel-stars-' + me.uid, []);
   setTab('chats'); showVerifyBar(); beat(); registerDevice();
   U.cfg = onSnapshot(doc(db, 'config', 'turn'), sn => { TURNCFG = sn.exists() ? sn.data() : {}; iceAt = Date.now(); loadIce(); }, () => {});
-  U.adm = onSnapshot(doc(db, 'config', 'admin'), sn => { adminUid = sn.exists() ? sn.data().uid : null; }, () => {}); heartbeat = setInterval(beat, 30000);
+  U.adm = onSnapshot(doc(db, 'config', 'admin'), sn => { adminUid = sn.exists() ? sn.data().uid : null; }, () => {}); heartbeat = setInterval(beat, 120000);
   refresher = setInterval(() => { renderChats(); if (tab === 'calls') renderPeople(); if (active) renderChatHeader(); }, 30000);
   U.users = onSnapshot(collection(db, 'users'), snap => {
     users.clear(); snap.forEach(d => users.set(d.id, { id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
     usersLoaded = true; if (!E2E.started) { E2E.started = true; initE2E(); } else if (E2E.ready && users.get(me.uid) && users.get(me.uid).pub === undefined) publishPub();
     if (pendingTo) { const t = pendingTo; pendingTo = null; try { history.replaceState(history.state, '', location.pathname); } catch {} if (t === me.uid) toast('That is your own chat link'); else if (users.has(t)) setTimeout(() => openPerson(t), 0); else toast('Could not find that person'); }
-    renderChats(); renderPeople(); renderUpdates(); if (active) renderChatHeader(); if (curScreen === 'settings') fillSettings(false);
+    clearTimeout(_usT); _usT = setTimeout(() => { renderChats(); if (tab === 'calls') renderPeople(); if (tab === 'updates') renderUpdates(); if (active) renderChatHeader(); if (curScreen === 'settings') fillSettings(false); }, 400);
   }, err => { console.error(err); toast('Could not load people. Publish the Firestore rules.'); });
   U.chats = onSnapshot(query(collection(db, 'chats'), where('members', 'array-contains', me.uid)), snap => {
     const first = !chatsReady;
@@ -964,7 +981,9 @@ function personItem(u) {
   top.append(el('strong', null, u.displayName || 'User')); sub.append(el('small', null, u.about || statusText(u)));
   main.append(top, sub); b.append(avatar(u, 'lg'), main); b.onclick = () => openDM(u); return b;
 }
-function renderChats() {
+let _rcT = 0;
+function renderChats() { if (_rcT) return; _rcT = setTimeout(() => { _rcT = 0; renderChatsNow(); }, 60); }
+function renderChatsNow() {
   if (!me) return;
   const q = $('chatSearch').value.trim().toLowerCase(), box = $('chatList'); box.innerHTML = '';
   const all = chatEntries(), arch = chatEntries(true), list = all.filter(c => !q || chatTitle(c).toLowerCase().includes(q));
@@ -1002,9 +1021,21 @@ function sysNotify(title, opts) {
   // Android Chrome only allows notifications created by the service worker.
   if (navigator.serviceWorker?.getRegistration) navigator.serviceWorker.getRegistration().then(r => r?.showNotification ? r.showNotification(title, o) : fallback()).catch(fallback); else fallback();
 }
+let bnT = 0, unreadTitle = 0;
+function banner(title, body, chatId) {
+  let bn = $('banner'); if (!bn) { bn = el('div', 'banner'); bn.id = 'banner'; document.body.append(bn); }
+  const c = chatId ? (chatId === 'general' ? null : chats.get(chatId)) : null; bn.innerHTML = '';
+  const t = el('div', 'bt'); t.append(el('strong', null, title), el('span', null, String(body).slice(0, 140)));
+  bn.append(c ? chatAvatar(c) : iconAvatar('chat'), t); bn.classList.add('show');
+  bn.onclick = () => { bn.classList.remove('show'); if (chatId) openChat(chatId); };
+  let y0 = null; bn.ontouchstart = e => { y0 = e.touches[0].clientY; }; bn.ontouchend = e => { if (y0 !== null && y0 - e.changedTouches[0].clientY > 20) { bn.classList.remove('show'); e.stopPropagation(); } y0 = null; };
+  clearTimeout(bnT); bnT = setTimeout(() => bn.classList.remove('show'), 5500);
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { unreadTitle = 0; document.title = 'Dxel Chat'; try { navigator.clearAppBadge?.(); } catch {} } });
 function notify(title, body, reminder, chatId) {
   if (!reminder && !prefs.preview) body = 'New message';
-  toast(`${title}: ${body}`.slice(0, 120));
+  if (document.hidden) { unreadTitle++; document.title = `(${unreadTitle}) Dxel Chat`; try { navigator.setAppBadge?.(unreadTitle); } catch {} }
+  else if (chatId) banner(title, body, chatId); else toast(`${title}: ${body}`.slice(0, 120));
   if (prefs.sound) playTone(prefs.tone); if (prefs.vibe) navigator.vibrate?.(120);
   if (document.hidden) sysNotify(title, { body, tag: 'dxel-msg', renotify: true, data: { chatId } });
 }
@@ -1139,7 +1170,15 @@ function renderChatHeader() {
   $('chatStatus').textContent = s; refreshTicks();
   const bp = c.type === 'dm' && blocked.has(otherOf(c));
   $('voiceCall').hidden = $('videoCall').hidden = c.type !== 'dm' || bp; applyBlockUI(c);
-  const en = $('encNote'); if (c.type === 'dm') { const on = E2E.ready && !!users.get(otherOf(c))?.pub; en.hidden = false; en.innerHTML = ic('lock') + '<span>' + (on ? 'Messages are end-to-end encrypted. Tap to verify.' : 'Not end-to-end encrypted yet: waiting for ' + chatTitle(c).split(' ')[0] + ' to update the app.') + '</span>'; en.onclick = on ? () => verifySheet(c) : null; } else if (c.type === 'group') { en.hidden = false; en.innerHTML = ic('lock') + '<span>' + (c.gk ? 'Messages in this group are end-to-end encrypted.' : 'This group is not end-to-end encrypted.') + '</span>'; en.onclick = null; } else en.hidden = true;
+  const en = $('encNote');
+  if (c.type === 'dm' || (c.type === 'group' && c.gk)) {
+    const can = c.type === 'dm' ? (E2E.ready && !!users.get(otherOf(c))?.pub) : (E2E.ready && !!c.gk);
+    en.hidden = false;
+    const txt = c.plain ? 'Encryption is OFF for this chat. Tap to turn it on.' : can ? (c.type === 'dm' ? 'Messages are end-to-end encrypted. Tap for options.' : 'Messages in this group are end-to-end encrypted. Tap for options.') : (c.type === 'dm' ? 'Not end-to-end encrypted yet: waiting for ' + chatTitle(c).split(' ')[0] + ' to update the app.' : 'This group is waiting for encryption keys.');
+    en.innerHTML = ic('lock') + '<span>' + txt + '</span>';
+    en.classList.toggle('off', !!c.plain);
+    en.onclick = (can || c.plain) ? () => encSheet(c, can) : null;
+  } else if (c.type === 'group') { en.hidden = false; en.classList.remove('off'); en.innerHTML = ic('lock') + '<span>This group is not end-to-end encrypted.</span>'; en.onclick = null; } else en.hidden = true;
   const db_ = $('dispBar'); db_.hidden = !c.disappear; if (c.disappear) db_.innerHTML = ic('clock') + '<span>Disappearing messages are on: ' + dispName(c.disappear) + '</span>';
 }
 function applyBlockUI(c = curChat()) {
@@ -1447,8 +1486,8 @@ async function sendTo(chatId, data) {
   let body = { ...data }, preview = previewOf(data).slice(0, 120);
   if (dc?.type === 'dm') {
     if (E2E.needRestore || E2E.stale) throw Object.assign(new Error('locked'), { code: 'e2e-locked' });
-    const sealed = await sealMsg(dc, data); if (sealed) { body = { type: 'enc', ...sealed }; preview = '🔒 Message'; }
-  } else if (dc?.type === 'group' && dc.gk) {
+    const sealed = dc.plain ? null : await sealMsg(dc, data); if (sealed) { body = { type: 'enc', ...sealed }; preview = '🔒 Message'; }
+  } else if (dc?.type === 'group' && dc.gk && !dc.plain) {
     if (E2E.needRestore || E2E.stale || !E2E.ready) throw Object.assign(new Error('locked'), { code: 'e2e-locked' });
     const sealed = await sealGroup(dc, data); if (sealed) { body = { type: 'enc', ...sealed }; preview = '🔒 Message'; }
   }
@@ -1467,9 +1506,24 @@ form.addEventListener('submit', async e => {
 });
 $('actionBtn').addEventListener('click', () => { if (rec) return stopRec(true); if (input.value.trim()) return form.requestSubmit(); startRec(); });
 $('attachBtn').addEventListener('click', e => { e.stopPropagation(); if (rec) return stopRec(false); $('emojiPanel').hidden = true; $('attachMenu').hidden = !$('attachMenu').hidden; });
-$('camBtn').addEventListener('click', () => $('fileCamera').click());
-$('attachMenu').addEventListener('click', e => { const b = e.target.closest('button[data-pick]'); if (!b) return; $('attachMenu').hidden = true; if (b.dataset.pick === 'vnote') return openVNote(); if (b.dataset.pick === 'poll') return openPoll(); if (b.dataset.pick === 'sched') return openSchedule(); $({ media: 'fileMedia', camera: 'fileCamera', doc: 'fileDoc' }[b.dataset.pick]).click(); });
-['fileMedia', 'fileCamera', 'fileDoc'].forEach(id => $(id).addEventListener('change', e => { [...e.target.files].forEach(f => queueUpload(f)); e.target.value = ''; }));
+$('camBtn').addEventListener('click', e => { e.stopPropagation(); $('attachMenu').hidden = true; $('camMenu').hidden = !$('camMenu').hidden; });
+$('camMenu').addEventListener('click', e => { const b = e.target.closest('button[data-cam]'); if (!b) return; $('camMenu').hidden = true; if (b.dataset.cam === 'vnote') return openVNote(); $(b.dataset.cam === 'video' ? 'fileCamVid' : 'fileCamera').click(); });
+function sendLocation() {
+  if (!navigator.geolocation) { toast('Location is not available on this phone'); return; }
+  toast('Getting your location…');
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const { latitude: la, longitude: lo } = pos.coords; const url = `https://www.google.com/maps?q=${la.toFixed(5)},${lo.toFixed(5)}`;
+    try { await sendTo(active.id, { type: 'text', text: '📍 My location\n' + url }); } catch (er) { console.error(er); toast('Could not send location'); }
+  }, () => toast('Allow location access in your browser settings first'), { enableHighAccuracy: true, timeout: 15000 });
+}
+function sendContact() {
+  openSheet('Share a contact', b => {
+    const list = others(); if (!list.length) b.append(el('p', 'empty', 'No one to share yet.'));
+    list.forEach(u => b.append(personRow(u, async () => { closeSheet(); try { await sendTo(active.id, { type: 'text', text: '👤 ' + (u.displayName || 'Contact') + '\nChat with them: ' + shareUrl() + '?to=' + u.id }); } catch (er) { console.error(er); toast('Could not send contact'); } })));
+  });
+}
+$('attachMenu').addEventListener('click', e => { const b = e.target.closest('button[data-pick]'); if (!b) return; $('attachMenu').hidden = true; if (b.dataset.pick === 'vnote') return openVNote(); if (b.dataset.pick === 'poll') return openPoll(); if (b.dataset.pick === 'sched') return openSchedule(); if (b.dataset.pick === 'loc') return sendLocation(); if (b.dataset.pick === 'contact') return sendContact(); if (b.dataset.pick === 'camera') { e.stopPropagation(); $('camMenu').hidden = false; return; } $({ media: 'fileMedia', camera: 'fileCamera', doc: 'fileDoc' }[b.dataset.pick]).click(); });
+['fileMedia', 'fileCamera', 'fileCamVid', 'fileDoc'].forEach(id => $(id).addEventListener('change', e => { [...e.target.files].forEach(f => queueUpload(f)); e.target.value = ''; }));
 const EMOJIS = '😀 😃 😄 😁 😆 😅 😂 🤣 😊 😇 🙂 😉 😍 🥰 😘 😋 😎 🤩 🥳 😏 😌 😴 🤔 🫡 😮 😢 😭 😡 🥺 😱 🤗 🙄 👍 👎 👏 🙌 🙏 💪 👋 ✌️ 🤝 👀 ❤️ 💔 🔥 ✨ 🎉 💯 ✅ ❌ 🚀 📚 💡 🎵 ☕ 🍕 🌍 🌞 🌙'.split(' ');
 EMOJIS.forEach(em => { const b = el('button', null, em); b.type = 'button'; b.onclick = () => { const st = input.selectionStart ?? input.value.length; input.setRangeText(em, st, input.selectionEnd ?? st, 'end'); input.dispatchEvent(new Event('input')); input.focus(); }; $('emojiPanel').append(b); });
 $('emojiBtn').addEventListener('click', e => { e.stopPropagation(); $('attachMenu').hidden = true; $('emojiPanel').hidden = !$('emojiPanel').hidden; });
@@ -1995,6 +2049,21 @@ async function fingerprint(a, b) {
   const h = new Uint8Array(await crypto.subtle.digest('SHA-256', TE.encode([a, b].sort().join('|')))); const g = [];
   for (let i = 0; i < 12; i++) g.push(String(((h[2 * i] << 8) | h[2 * i + 1]) % 100000).padStart(5, '0')); return g;
 }
+function encSheet(c, can) {
+  const canToggle = c.type === 'dm' || isAdmin(c);
+  openSheet(c.plain ? 'Encryption is off' : 'Encryption', b => {
+    b.append(para(c.plain
+      ? 'New messages in this chat are sent as normal text. They are faster and can always be read, even on a new phone, but the app owner could read them in the database. Older locked messages stay locked.'
+      : 'New messages are locked so only the people in this chat can read them. If you clear your browser data or change phone without your backup, locked messages cannot be read again.'));
+    if (canToggle) b.append(rowBtn(c.plain ? 'lock' : 'lock', c.plain ? 'Turn encryption ON' : 'Turn encryption OFF', async () => {
+      closeSheet();
+      try { await updateDoc(doc(db, 'chats', c.id), { plain: !c.plain }); toast(c.plain ? 'Encryption is on' : 'Encryption is off for this chat'); }
+      catch (er) { console.error(er); toast('Could not change it. Publish the latest firestore.rules.'); }
+    }));
+    else b.append(para('Only an admin can change this for the group.'));
+    if (c.type === 'dm' && can && !c.plain) b.append(rowBtn('lock', 'Check the security code', () => { closeSheet(); verifySheet(c); }));
+  });
+}
 async function verifySheet(c) {
   const theirs = users.get(otherOf(c))?.pub; if (!E2E.ready || !theirs) { toast('Encryption is not active in this chat yet'); return; }
   const g = await fingerprint(E2E.pubStr, theirs);
@@ -2485,7 +2554,7 @@ function deviceName() {
 const devRef = () => doc(db, 'users', me.uid, 'devices', deviceId);
 function registerDevice() {
   setDoc(devRef(), { name: deviceName(), lastActive: serverTimestamp(), revoked: false }, { merge: true }).catch(() => {});
-  U.device = onSnapshot(devRef(), async s => { if (s.exists() && s.data().revoked) { toast('You were signed out from another device'); try { await deleteDoc(devRef()); } catch {} try { await signOut(auth); } catch {} } }, () => {});
+  U.device = onSnapshot(devRef(), async s => { if (s.exists() && s.data().revoked) { toast('You were signed out from another device'); try { await deleteDoc(devRef()); } catch {} try { await (() => { try { localStorage.removeItem('dxel-had-user'); } catch {} return signOut(auth); })(); } catch {} } }, () => {});
 }
 setInterval(() => { if (me && !document.hidden) updateDoc(devRef(), { lastActive: serverTimestamp() }).catch(() => {}); }, 300000);
 async function linkedDevicesSheet() {
@@ -2522,7 +2591,7 @@ $('filePhoto').addEventListener('change', async e => {
   try { const s = await shrinkImage(f, 320, 45 * 1024); if (s.size > 90 * 1024) throw new Error('big'); await setDoc(doc(db, 'users', me.uid), { customPhoto: await readAsDataURL(s) }, { merge: true }); toast('Photo updated'); } catch { toast('Could not use that photo'); }
 });
 $('setPhotoDel').addEventListener('click', async () => { try { await setDoc(doc(db, 'users', me.uid), { customPhoto: '' }, { merge: true }); toast('Photo removed'); } catch { toast('Could not remove photo'); } });
-$('signOutBtn').addEventListener('click', async () => { if (confirm('Sign out of Dxel Chat?')) { try { try { await deleteDoc(devRef()); } catch {} await signOut(auth); } catch (er) { toast(er.message); } } });
+$('signOutBtn').addEventListener('click', async () => { if (confirm('Sign out of Dxel Chat?')) { try { try { await deleteDoc(devRef()); } catch {} await (() => { try { localStorage.removeItem('dxel-had-user'); } catch {} return signOut(auth); })(); } catch (er) { toast(er.message); } } });
 function onNet() { $('offBar').hidden = navigator.onLine; }
 window.addEventListener('online', onNet); window.addEventListener('offline', onNet); onNet();
 applyPrefs();
@@ -2762,7 +2831,7 @@ async function pinEntered() {
   $('lockPad').append(b);
 });
 $('lockCancel').addEventListener('click', () => { hideLock(); fillSettings(false); });
-$('lockForgot').addEventListener('click', async () => { if (!confirm('Sign out and remove the app lock? You can sign in again with your email or Google.')) return; lsSet('dxel-lock', null); lockCfg = null; hideLock(); try { await signOut(auth); } catch {} });
+$('lockForgot').addEventListener('click', async () => { if (!confirm('Sign out and remove the app lock? You can sign in again with your email or Google.')) return; lsSet('dxel-lock', null); lockCfg = null; hideLock(); try { await (() => { try { localStorage.removeItem('dxel-had-user'); } catch {} return signOut(auth); })(); } catch {} });
 document.addEventListener('visibilitychange', () => { if (document.hidden) hiddenAt = Date.now(); else if (lockCfg && hiddenAt && Date.now() - hiddenAt > 30000 && $('lock').hidden) showLock('unlock', 'Dxel Chat is locked', 'Enter your PIN'); });
 if (lockCfg) showLock('unlock', 'Dxel Chat is locked', 'Enter your PIN');
 function showNotifBar() { $('notifBar').hidden = !('Notification' in window) || Notification.permission !== 'default' || lsGet('dxel-notifask', false); }
