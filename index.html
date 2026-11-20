@@ -162,6 +162,7 @@ svg{width:1em;height:1em;display:block}
 .recstop,.revresume{width:36px;height:36px;border-radius:50%;background:#ffffff1f;display:grid;place-items:center;margin-left:auto;flex:none;font-size:18px;color:var(--ink)}.revresume{margin-left:0;background:#ff4d4f33;color:#ff6b6d}
 .pop{position:absolute;bottom:calc(100% + 8px);left:10px;background:var(--surf);border:1px solid var(--line);border-radius:18px;padding:8px;box-shadow:0 12px 34px #000a;z-index:10;min-width:210px}
 .pop.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;width:min(340px,calc(100vw - 20px));padding:12px 8px}.pop.grid button{flex-direction:column;gap:6px;text-align:center;font-size:12.5px;padding:8px 2px}.pop.camopt{left:auto;right:10px}.c7{background:linear-gradient(135deg,#10b981,#059669)}.c8{background:linear-gradient(135deg,#0ea5e9,#2563eb)}
+.vt{display:inline-grid;place-items:center;width:16px;height:16px;margin-left:5px;border-radius:50%;background:#1d9bf0;color:#fff;font-size:11px;font-weight:700;line-height:1;vertical-align:middle;flex:none}
 .banner{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:10px;right:10px;max-width:520px;margin:0 auto;z-index:260;display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surf);color:var(--ink);border:1px solid var(--line);border-left:4px solid var(--g2);border-radius:16px;box-shadow:0 12px 34px #000b;transform:translateY(-140%);transition:transform .28s ease;cursor:pointer}.banner.show{transform:none}.banner .av{width:40px;height:40px;flex:none}.banner .bt{display:flex;flex-direction:column;min-width:0}.banner .bt strong{font-size:14.5px}.banner .bt span{font-size:13.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pop button{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:10px;border-radius:12px;font-size:15px}.pop button:hover{background:var(--chip)}
 .ci{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;flex:none}.ci svg{font-size:19px}.c1{background:linear-gradient(135deg,#8b5cf6,#6366f1)}.c2{background:linear-gradient(135deg,#f43f5e,#ec4899)}.c3{background:linear-gradient(135deg,#3b82f6,#0ea5e9)}
@@ -341,7 +342,7 @@ button.srow{width:100%;text-align:left}
     <nav class="bottom" id="bottomNav">
       <button data-tab="chats" class="on"><span data-ic="chat"></span><i class="tl" data-t="chats">Chats</i><b class="bdg" id="chatBadge" hidden>0</b></button>
       <button data-tab="updates"><span data-ic="status"></span><i class="tl" data-t="updates">Updates</i><b class="bdg" id="upBadge" hidden>•</b></button>
-      <button data-tab="calls"><span data-ic="phone"></span><i class="tl" data-t="calls">Calls</i></button>
+      <button data-tab="calls"><span data-ic="phone"></span><i class="tl" data-t="calls">Calls</i><b class="bdg" id="callBadge" hidden>0</b></button>
     </nav>
   </section>
 
@@ -528,6 +529,7 @@ button.srow{width:100%;text-align:left}
     <button class="linkish" id="lockCancel" type="button" hidden>Cancel</button>
   </div>
 </div>
+<div class="overlay" id="verifyGate" hidden style="z-index:280;background:var(--bg)"><div style="max-width:380px;text-align:center;display:flex;flex-direction:column;gap:14px"><h2 style="margin:0">Verify your email</h2><p class="para">We sent a link to <b id="vgMail"></b>. Open it, then come back here and tap the button. Check your spam folder too.</p><button class="btn wide" id="vgDone" type="button">I have verified</button><button class="btn wide sec" id="vgResend" type="button">Send the email again</button><button class="linkish" id="vgOut" type="button">Sign out</button></div></div>
 <div class="toast" id="toast" role="status"></div>
 
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
@@ -725,6 +727,44 @@ let statuses = [], callsData = [], generalLast = null, readMap = {}, seenMap = {
 const blocked = new Set();
 let adminUid = null;
 let cprefs = { pin: {}, mute: {}, arch: {} }, stars = [], searchQ = '';
+let badges = {};
+const isOwner = () => !!me && !!adminUid && adminUid === me.uid;
+const vtick = uid => badges[uid] ? el('span', 'vt', '✓') : null;
+function nameEl(id, text, tag = 'strong', cls = null) { const e = el(tag, cls, text); const t = vtick(id); if (t) e.append(t); return e; }
+function tickRow(uid) { return rowBtn('star', badges[uid] ? 'Remove blue tick' : 'Give blue tick', async () => { closeSheet(); try { await setDoc(doc(db, 'config', 'badges'), { [uid]: !badges[uid] }, { merge: true }); toast(badges[uid] ? 'Blue tick given' : 'Blue tick removed'); } catch { toast('Could not change it. Publish the latest firestore.rules.'); } }); }
+function ownerSheet(uid) { const u = users.get(uid) || { id: uid, displayName: 'User' }; openSheet(u.displayName || 'Member', b => { if (uid !== me.uid) b.append(rowBtn('info', 'View profile', () => { closeSheet(); openPerson(uid); })); b.append(tickRow(uid)); }); }
+let uSubs = {}, uReady = {}, contactIds = new Set(), missedSeenAt = 0; const missedAlerted = new Set();
+function watchUser(id) {
+  if (!id) return Promise.resolve(null); if (uSubs[id]) return uReady[id];
+  uReady[id] = new Promise(res => {
+    uSubs[id] = onSnapshot(doc(db, 'users', id), sn => {
+      if (sn.exists()) users.set(id, { id, ...sn.data({ serverTimestamps: 'estimate' }) }); else users.delete(id);
+      res(users.get(id) || null); onUserChange(id);
+    }, err => { console.warn('user', id, err.code); res(null); });
+  });
+  return uReady[id];
+}
+let _usT = 0;
+function onUserChange(id) {
+  if (!me) return;
+  if (id === me.uid) { usersLoaded = true; if (!E2E.started) { E2E.started = true; initE2E(); } else if (E2E.ready && users.get(me.uid) && users.get(me.uid).pub === undefined) publishPub(); }
+  clearTimeout(_usT); _usT = setTimeout(() => { renderChats(); if (tab === 'calls') renderPeople(); if (tab === 'updates') renderUpdates(); if (active) renderChatHeader(); if (curScreen === 'settings') fillSettings(false); }, 400);
+}
+function syncWatch() {
+  if (!me) return; const want = new Set([me.uid, ...contactIds]);
+  chats.forEach(c => { if (c.type === 'dm' || c.type === 'group') (c.members || []).forEach(x => want.add(x)); });
+  callsData.forEach(c => want.add(c.callerId === me.uid ? c.calleeId : c.callerId));
+  want.forEach(id => { if (id) watchUser(id); });
+}
+const dmPartners = () => { const st = new Set(); chats.forEach(c => { if (c.type === 'dm') st.add(otherOf(c)); }); return st; };
+const isKnown = id => contactIds.has(id) || dmPartners().has(id);
+const addContactDoc = id => setDoc(doc(db, 'users', me.uid, 'contacts', id), { at: Date.now() }).catch(e => console.warn('contact', e.code));
+async function handleLinkTo(t) {
+  if (t === me.uid) { toast('That is your own chat link'); return; }
+  for (let i = 0; i < 50 && !chatsReady; i++) await new Promise(r => setTimeout(r, 100));
+  const u = await watchUser(t); if (!u) { toast('Could not find that person'); return; }
+  await addContactDoc(t); toast((u.displayName || 'Contact') + ' added to your contacts'); openDM(u);
+}
 let pendingTo = new URLSearchParams(location.search).get('to'), pendingChat = new URLSearchParams(location.search).get('chat'), usersLoaded = false;
 let replyTo = null, selectedRow = null, rec = null, deferredInstall = null;
 const U = { users: null, chats: null, comm: null, calls: null, incoming: null, status: null, general: null, msgs: null, blocks: null, device: null, cfg: null, adm: null };
@@ -748,7 +788,7 @@ const FAB = { chats: 'chat', updates: 'camera', calls: 'phone' };
 function setTab(t) {
   tab = t;
   document.querySelectorAll('#bottomNav button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
-  $('paneChats').classList.toggle('on', t === 'chats'); $('paneUpdates').classList.toggle('on', t === 'updates'); $('paneCalls').classList.toggle('on', t === 'calls');
+  $('paneChats').classList.toggle('on', t === 'chats'); $('paneUpdates').classList.toggle('on', t === 'updates'); $('paneCalls').classList.toggle('on', t === 'calls'); if (t === 'calls') markMissedSeen();
   $('fab').innerHTML = ic(FAB[t]); $('fab').setAttribute('aria-label', { chats: 'New chat', updates: 'New status', calls: 'New call' }[t]);
   if (t === 'updates') { renderUpdates(); } if (t === 'calls') renderPeople();
 }
@@ -854,7 +894,7 @@ function teardown() {
   clearInterval(heartbeat); clearInterval(refresher);
   if (call) endCall(true); hideIncoming(); closeOverlays(); if (curScreen !== 'main') { closeChatState(); setScreen('main'); }
   Object.assign(E2E, { priv: null, pubStr: '', ready: false, needRestore: false, stale: false, hasBackup: false, backup: null, started: false }); keyCache.clear();
-  users.clear(); chats.clear(); communities.clear(); blocked.clear(); known.clear(); statuses = []; callsData = []; generalLast = null; chatsReady = false;
+  users.clear(); contactIds = new Set(); missedAlerted.clear(); chats.clear(); communities.clear(); blocked.clear(); known.clear(); statuses = []; callsData = []; generalLast = null; chatsReady = false;
   $('chatList').innerHTML = ''; $('people').innerHTML = ''; $('upList').innerHTML = '';
 }
 async function beat() {
@@ -863,22 +903,21 @@ async function beat() {
   if (!users.get(me.uid)?.hideSeen) data.lastSeen = serverTimestamp();
   try { await setDoc(doc(db, 'users', me.uid), data, { merge: true }); } catch (e) { console.warn('presence', e.code); }
 }
-let _usT = 0;
 function startSession() {
   readMap = lsGet('dxel-read-' + me.uid, {}); seenMap = lsGet('dxel-seen-' + me.uid, {});
   hiddenIds = new Set([...lsGet('dxel-hidden-' + me.uid, []), ...lsGet('teamup-hidden-' + me.uid, [])]);
-  hiddenChats = lsGet('dxel-hchats-' + me.uid, {}); showTeam = lsGet('dxel-showteam', true);
+  hiddenChats = lsGet('dxel-hchats-' + me.uid, {}); showTeam = lsGet('dxel-showteam', false);
   cprefs = Object.assign({ pin: {}, mute: {}, arch: {} }, lsGet('dxel-cprefs-' + me.uid, {})); stars = lsGet('dxel-stars-' + me.uid, []);
+  missedSeenAt = lsGet('dxel-callseen-' + me.uid, 0); if (!missedSeenAt) { missedSeenAt = Date.now(); lsSet('dxel-callseen-' + me.uid, missedSeenAt); }
   setTab('chats'); showVerifyBar(); beat(); registerDevice();
   U.cfg = onSnapshot(doc(db, 'config', 'turn'), sn => { TURNCFG = sn.exists() ? sn.data() : {}; iceAt = Date.now(); loadIce(); }, () => {});
-  U.adm = onSnapshot(doc(db, 'config', 'admin'), sn => { adminUid = sn.exists() ? sn.data().uid : null; }, () => {}); heartbeat = setInterval(beat, 120000);
-  refresher = setInterval(() => { renderChats(); if (tab === 'calls') renderPeople(); if (active) renderChatHeader(); }, 30000);
-  U.users = onSnapshot(collection(db, 'users'), snap => {
-    users.clear(); snap.forEach(d => users.set(d.id, { id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
-    usersLoaded = true; if (!E2E.started) { E2E.started = true; initE2E(); } else if (E2E.ready && users.get(me.uid) && users.get(me.uid).pub === undefined) publishPub();
-    if (pendingTo) { const t = pendingTo; pendingTo = null; try { history.replaceState(history.state, '', location.pathname); } catch {} if (t === me.uid) toast('That is your own chat link'); else if (users.has(t)) setTimeout(() => openPerson(t), 0); else toast('Could not find that person'); }
-    clearTimeout(_usT); _usT = setTimeout(() => { renderChats(); if (tab === 'calls') renderPeople(); if (tab === 'updates') renderUpdates(); if (active) renderChatHeader(); if (curScreen === 'settings') fillSettings(false); }, 400);
-  }, err => { console.error(err); toast('Could not load people. Publish the Firestore rules.'); });
+  U.adm = onSnapshot(doc(db, 'config', 'admin'), sn => { adminUid = sn.exists() ? sn.data().uid : null; }, () => {});
+  U.badges = onSnapshot(doc(db, 'config', 'badges'), sn => { badges = sn.exists() ? sn.data() : {}; renderChats(); if (active) { renderChatHeader(); } }, () => {}); heartbeat = setInterval(beat, 120000);
+  refresher = setInterval(() => { checkMissed(); renderChats(); if (tab === 'calls') renderPeople(); if (active) renderChatHeader(); }, 30000);
+  U.users = () => { Object.values(uSubs).forEach(f => { try { f(); } catch {} }); uSubs = {}; uReady = {}; };
+  watchUser(me.uid); syncWatch();
+  U.contacts = onSnapshot(collection(db, 'users', me.uid, 'contacts'), snap => { contactIds = new Set(snap.docs.map(d => d.id)); syncWatch(); onUserChange('contacts'); }, err => console.warn('contacts', err.code));
+  if (pendingTo) { const t = pendingTo; pendingTo = null; try { history.replaceState(history.state, '', location.pathname); } catch {} handleLinkTo(t); }
   U.chats = onSnapshot(query(collection(db, 'chats'), where('members', 'array-contains', me.uid)), snap => {
     const first = !chatsReady;
     snap.docChanges().forEach(ch => {
@@ -889,7 +928,7 @@ function startSession() {
       if (first || !known.has(id)) { if (readMap[id] === undefined) { readMap[id] = ms; saveRead(); } known.set(id, ms); }
       else noteIncoming(d);
     });
-    chatsReady = true; renderChats(); if (active) { renderChatHeader(); applyChatRules(); }
+    chatsReady = true; syncWatch(); renderChats(); if (active) { renderChatHeader(); applyChatRules(); }
     if (pendingChat && (pendingChat === 'general' || chats.has(pendingChat))) { const t = pendingChat; pendingChat = null; try { history.replaceState(history.state, '', location.pathname); } catch {} openChat(t); }
   }, err => { console.error(err); toast('Could not load chats. Publish the Firestore rules.'); });
   U.comm = onSnapshot(query(collection(db, 'chats'), where('type', '==', 'community')), snap => {
@@ -909,7 +948,7 @@ function startSession() {
   }, err => console.warn('general', err.code));
   U.calls = onSnapshot(query(collection(db, 'calls'), where('participants', 'array-contains', me.uid), limit(40)), snap => {
     callsData = snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) })).sort((a, b) => msOf(b.createdAt) - msOf(a.createdAt));
-    renderPeople();
+    syncWatch(); renderPeople(); checkMissed();
   }, err => console.warn('calls history', err.code));
   U.status = onSnapshot(query(collection(db, 'status'), where('createdAt', '>', Timestamp.fromMillis(Date.now() - DAY))), snap => {
     statuses = snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) })).filter(s => msOf(s.createdAt) > Date.now() - DAY).sort((a, b) => msOf(a.createdAt) - msOf(b.createdAt));
@@ -927,7 +966,7 @@ function chatTitle(c) { if (c.type === 'dm') return users.get(otherOf(c))?.displ
 function profileCard(c) {
   const dm = c.type === 'dm', u = dm ? (users.get(otherOf(c)) || { id: otherOf(c), displayName: chatTitle(c) }) : null;
   const ov = el('div', 'pfov'), card = el('div', 'pfcard'); ov.setAttribute('role', 'dialog'); ov.setAttribute('aria-label', chatTitle(c) + ' profile');
-  const big = dm ? avatar(u, 'xxl', false) : chatAvatar(c, 'xxl'); card.append(big, el('h3', null, chatTitle(c)));
+  const big = dm ? avatar(u, 'xxl', false) : chatAvatar(c, 'xxl'); card.append(big, dm ? nameEl(otherOf(c), chatTitle(c), 'h3') : el('h3', null, chatTitle(c)));
   if (dm) { card.append(el('p', null, u.about || 'Hey there! I am using Dxel Chat'), el('small', null, statusText(u))); }
   else if (c.type === 'general') card.append(el('p', null, 'Everyone on Dxel Chat'));
   else card.append(el('p', null, `${c.members?.length || 0} members`), ...(c.description ? [el('small', null, c.description)] : []));
@@ -990,7 +1029,7 @@ function renderChatsNow() {
   list.forEach(c => {
     const b = el('button', 'item'); b.type = 'button'; const un = isUnread(c);
     const main = el('div', 'imain'), top = el('div', 'irow'), sub = el('div', 'isub');
-    const tm = el('span', 'itime' + (un ? ' new' : '')); if (cprefs.pin[c.id]) tm.append(el('span', 'fl', '📌')); if (cprefs.mute[c.id]) tm.append(el('span', 'fl', '🔕')); tm.append(document.createTextNode(listTime(chatMs(c)))); top.append(el('strong', null, chatTitle(c)), tm);
+    const tm = el('span', 'itime' + (un ? ' new' : '')); if (cprefs.pin[c.id]) tm.append(el('span', 'fl', '📌')); if (cprefs.mute[c.id]) tm.append(el('span', 'fl', '🔕')); tm.append(document.createTextNode(listTime(chatMs(c)))); top.append(c.type === 'dm' ? nameEl(otherOf(c), chatTitle(c)) : el('strong', null, chatTitle(c)), tm);
     sub.append(el('small', un ? 'unread' : '', chatPreview(c))); if (un) sub.append(el('i', 'udot'));
     main.append(top, sub); const av = chatAvatar(c, 'lg'); av.style.cursor = 'pointer'; av.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); profileCard(c); }); b.append(av, main);
     let lp = null, fired = false; const stopLp = () => clearTimeout(lp);
@@ -1001,7 +1040,7 @@ function renderChatsNow() {
   });
   const have = new Set([...all, ...arch].filter(c => c.type === 'dm').map(otherOf));
   const ppl = others().filter(u => !have.has(u.id) && (!q || (u.displayName || '').toLowerCase().includes(q)));
-  if (ppl.length) { box.append(el('div', 'sub', 'People on Dxel Chat')); ppl.forEach(u => box.append(personItem(u))); }
+  if (ppl.length) { box.append(el('div', 'sub', 'Your contacts')); ppl.forEach(u => box.append(personItem(u))); }
   if (!list.length && !ppl.length) box.append(el('p', 'empty', q ? 'No chats found.' : 'No chats yet. Tap the chat button below to start one.'));
   else if (!q && !ppl.length && all.length <= 1) box.append(el('p', 'empty', 'Tap the chat button below to message someone, start a group or join a community.'));
   if (arch.length && !q) { const ab = el('button', 'item'); ab.type = 'button'; const m2 = el('div', 'imain'), t2 = el('div', 'irow'); t2.append(el('strong', null, `Archived (${arch.length})`)); m2.append(t2); ab.append(m2); ab.onclick = archivedSheet; box.append(ab); }
@@ -1022,12 +1061,12 @@ function sysNotify(title, opts) {
   if (navigator.serviceWorker?.getRegistration) navigator.serviceWorker.getRegistration().then(r => r?.showNotification ? r.showNotification(title, o) : fallback()).catch(fallback); else fallback();
 }
 let bnT = 0, unreadTitle = 0;
-function banner(title, body, chatId) {
+function banner(title, body, chatId, icon) {
   let bn = $('banner'); if (!bn) { bn = el('div', 'banner'); bn.id = 'banner'; document.body.append(bn); }
   const c = chatId ? (chatId === 'general' ? null : chats.get(chatId)) : null; bn.innerHTML = '';
   const t = el('div', 'bt'); t.append(el('strong', null, title), el('span', null, String(body).slice(0, 140)));
-  bn.append(c ? chatAvatar(c) : iconAvatar('chat'), t); bn.classList.add('show');
-  bn.onclick = () => { bn.classList.remove('show'); if (chatId) openChat(chatId); };
+  bn.append(c ? chatAvatar(c) : iconAvatar(icon || 'chat'), t); bn.classList.add('show');
+  bn.onclick = () => { bn.classList.remove('show'); if (chatId) openChat(chatId); else if (icon === 'phoneMissed') { if (curScreen !== 'main') goBack(); setTab('calls'); } };
   let y0 = null; bn.ontouchstart = e => { y0 = e.touches[0].clientY; }; bn.ontouchend = e => { if (y0 !== null && y0 - e.changedTouches[0].clientY > 20) { bn.classList.remove('show'); e.stopPropagation(); } y0 = null; };
   clearTimeout(bnT); bnT = setTimeout(() => bn.classList.remove('show'), 5500);
 }
@@ -1041,7 +1080,7 @@ function notify(title, body, reminder, chatId) {
 }
 
 /* ---------- new chat / group / community ---------- */
-const others = () => [...users.values()].filter(u => u.id !== me.uid && !blocked.has(u.id) && !u.hidden).sort((a, b) => (isOnline(b) - isOnline(a)) || (a.displayName || '').localeCompare(b.displayName || ''));
+const others = () => [...users.values()].filter(u => u.id !== me.uid && !blocked.has(u.id) && !u.hidden && isKnown(u.id)).sort((a, b) => (isOnline(b) - isOnline(a)) || (a.displayName || '').localeCompare(b.displayName || ''));
 function personRow(u, onClick, extra) {
   const b = el('button', 'pick'); b.type = 'button'; const info = el('span', 'pinfo');
   info.append(el('strong', null, u.displayName || u.email || 'User'), el('small', null, u.about || statusText(u)));
@@ -1050,8 +1089,9 @@ function personRow(u, onClick, extra) {
 function newChatSheet() {
   openSheet('New chat', b => {
     b.append(rowBtn('userPlus', 'New group', () => { closeSheet(); newGroupSheet(); }), rowBtn('globe', 'New community', () => { closeSheet(); newCommunitySheet(); }));
-    b.append(el('div', 'sub', 'People on Dxel Chat'));
-    const list = others(); if (!list.length) b.append(el('p', 'empty', 'No one else has joined yet. Share the link so your friends can sign up.'));
+    b.append(rowBtn('userPlus', 'Add a contact by link', () => { closeSheet(); addByLinkSheet(); }));
+    b.append(el('div', 'sub', 'Your contacts'));
+    const list = others(); if (!list.length) b.append(el('p', 'empty', 'No contacts yet. Tap “Add a contact by link”, or share your own link from Settings so friends can add you.'));
     list.forEach(u => b.append(personRow(u, () => { closeSheet(); openDM(u); })));
   });
 }
@@ -1070,7 +1110,7 @@ function newGroupSheet() {
     b.append(el('div', 'sub', 'Add members'));
     const sel = new Set(), btn = el('button', 'btn wide', 'Create group'); btn.type = 'button'; btn.disabled = true; btn.style.marginTop = '12px';
     const check = () => { btn.disabled = !(name.value.trim().length >= 2 && sel.size >= 1); };
-    const list = others(); if (!list.length) b.append(el('p', 'empty', 'No one else has joined yet.'));
+    const list = others(); if (!list.length) b.append(el('p', 'empty', 'No contacts yet. Add a friend with their link first.'));
     list.forEach(u => { const c = el('span', 'chk'); c.innerHTML = ic('check'); const r = personRow(u, () => { if (sel.has(u.id)) sel.delete(u.id); else sel.add(u.id); r.classList.toggle('on', sel.has(u.id)); check(); }, c); b.append(r); });
     name.addEventListener('input', check);
     btn.onclick = async () => {
@@ -1159,7 +1199,7 @@ function sendTyping(on) {
 }
 function renderChatHeader() {
   const c = curChat(); if (!c) return;
-  $('chatName').textContent = chatTitle(c); $('chatAv').replaceChildren(chatAvatar(c, 'sm'));
+  $('chatName').textContent = chatTitle(c); if (c.type === 'dm') { const t = vtick(otherOf(c)); if (t) $('chatName').append(t); } $('chatAv').replaceChildren(chatAvatar(c, 'sm'));
   let s = '';
   if (c.type === 'dm') s = statusText(users.get(otherOf(c)));
   else if (c.type === 'general') s = `${[...users.values()].filter(isOnline).length} online · everyone is here`;
@@ -1195,7 +1235,20 @@ async function toggleBlock(u, skipConfirm) {
   renderChats(); renderPeople(); if (active) renderChatHeader();
 }
 function deleteChatLocal() { const c = curChat(); if (!c) return; hiddenChats[c.id] = Math.max(Date.now(), chatMs(c)); lsSet('dxel-hchats-' + me.uid, hiddenChats); toast('Chat deleted from this phone'); goBack(); }
-function openPerson(uid) { const u = users.get(uid); if (u && uid !== me.uid) openDM(u); }
+async function openPerson(uid) { if (uid === me.uid) return; let u = users.get(uid); if (!u) u = await watchUser(uid); if (u) openDM(u); else toast('Could not find that person'); }
+function parseLink(v) { v = (v || '').trim(); try { const u = new URL(v); return u.searchParams.get('to') || ''; } catch {} const m = v.match(/[?&]to=([A-Za-z0-9]+)/); if (m) return m[1]; return /^[A-Za-z0-9]{20,40}$/.test(v) ? v : ''; }
+function addByLinkSheet() {
+  openSheet('Add a contact', b => {
+    b.append(para('Paste the chat link your friend shared (they find it in Settings → Copy my chat link). Only people you add, or who message you first, appear in your lists.'));
+    const inp = el('input', 'fi2'); inp.placeholder = 'Paste their link here'; const go = el('button', 'btn wide', 'Add contact'); go.type = 'button'; go.style.marginTop = '12px';
+    go.onclick = async () => {
+      const id = parseLink(inp.value); if (!id) { toast('That does not look like a Dxel link'); return; } if (id === me.uid) { toast('That is your own link'); return; }
+      go.disabled = true; const u = await watchUser(id); if (!u) { toast('Could not find that person'); go.disabled = false; return; }
+      await addContactDoc(id); closeSheet(); toast((u.displayName || 'Contact') + ' added'); openDM(u);
+    };
+    b.append(inp, go, el('div', 'sub', 'Your own link'), rowBtn('copy', 'Copy my chat link', async () => { const url = shareUrl() + '?to=' + me.uid; try { if (navigator.share) await navigator.share({ title: 'Chat with me on Dxel', url }); else { await navigator.clipboard.writeText(url); toast('Link copied'); } } catch {} }));
+  });
+}
 function blockedSheet() {
   openSheet('Blocked contacts', b => {
     if (!blocked.size) b.append(el('p', 'empty', 'You have not blocked anyone.'));
@@ -1240,6 +1293,7 @@ function memberActions(c, uid) {
   const u = users.get(uid) || { id: uid, displayName: 'User' }, adm = isAdmin(c, uid), creator = uid === c.createdBy, base = c.admins?.length ? c.admins : [c.createdBy];
   openSheet(u.displayName || 'Member', b => {
     b.append(rowBtn('info', 'View profile', () => { closeSheet(); openPerson(uid); }));
+    if (isOwner()) b.append(tickRow(uid));
     if (!creator) b.append(rowBtn('star', adm ? 'Remove as admin' : 'Make admin', async () => { closeSheet(); try { await updateDoc(doc(db, 'chats', c.id), { admins: adm ? base.filter(x => x !== uid) : [...new Set([...base, uid])] }); toast(adm ? 'No longer an admin' : (u.displayName || 'They') + ' is now an admin'); } catch { toast('Could not change. Publish the new Firestore rules.'); } }));
     if (!creator) b.append(rowBtn('logout', 'Remove from ' + (c.type === 'community' ? 'community' : 'group'), async () => {
       if (!confirm(`Remove ${u.displayName || 'this person'}?`)) return; closeSheet();
@@ -1251,6 +1305,27 @@ function memberActions(c, uid) {
     }, 'danger'));
   });
 }
+function addMembersSheet(c) {
+  openSheet('Add members', b => {
+    const cur = new Set(c.members || []); const list = others().filter(u => !cur.has(u.id));
+    if (!list.length) b.append(el('p', 'empty', 'All your contacts are already here. Add a friend first: New chat → Add a contact by link.'));
+    const sel = new Set(), btn = el('button', 'btn wide', 'Add to group'); btn.type = 'button'; btn.disabled = true; btn.style.marginTop = '12px';
+    list.forEach(u => { const ck = el('span', 'chk'); ck.innerHTML = ic('check'); const r = personRow(u, () => { if (sel.has(u.id)) sel.delete(u.id); else sel.add(u.id); r.classList.toggle('on', sel.has(u.id)); btn.disabled = !sel.size; }, ck); b.append(r); });
+    btn.onclick = async () => {
+      btn.disabled = true; const add = [...sel], all = [...cur, ...add], upd = { members: arrayUnion(...add) };
+      try {
+        if (c.gk) {
+          if (!E2E.ready || E2E.needRestore || E2E.stale) { toast('Unlock your private chats first (Chats screen, Unlock).'); btn.disabled = false; return; }
+          const n = (c.gk.cur || 1) + 1, w = await makeWraps(crypto.getRandomValues(new Uint8Array(32)), all);
+          if (!w) { toast('Someone has not updated the app yet, so the group cannot be locked for them. Ask them to open the app.'); btn.disabled = false; return; }
+          upd['gk.cur'] = n; upd['gk.k.' + n] = w;
+        }
+        await updateDoc(doc(db, 'chats', c.id), upd); closeSheet(); toast(add.length === 1 ? 'Member added' : add.length + ' members added');
+      } catch (e) { console.warn(e); toast('Could not add. Publish the latest firestore.rules.'); btn.disabled = false; }
+    };
+    b.append(btn);
+  });
+}
 function chatInfo() {
   const c = curChat(); if (!c) return;
   openSheet(c.type === 'dm' ? 'Contact info' : c.type === 'general' ? 'Team chat' : c.type === 'community' ? 'Community info' : 'Group info', b => {
@@ -1260,11 +1335,13 @@ function chatInfo() {
       const r = el('div', 'row2'); const p = el('button', 'cb'); p.type = 'button'; p.innerHTML = ic('phone'); p.onclick = () => { closeSheet(); $('voiceCall').click(); };
       const v = el('button', 'cb'); v.type = 'button'; v.innerHTML = ic('video'); v.onclick = () => { closeSheet(); $('videoCall').click(); }; r.append(p, v); b.append(r);
       b.append(rowBtn('lock', 'Verify security code', () => { closeSheet(); verifySheet(c); }));
+      if (isOwner()) b.append(tickRow(otherOf(c)));
     } else if (c.type === 'general') { top.append(el('p', null, 'Everyone on Dxel Chat can read and write here.')); b.append(top); }
     else {
       if (c.description) top.append(el('p', null, c.description)); b.append(top);
       b.append(el('div', 'sub', `${c.members?.length || 0} members`));
-      (c.members || []).forEach(id => { const u = users.get(id) || { id, displayName: 'User' }; const r = el('div', 'pick'); const info = el('span', 'pinfo'); info.append(el('strong', null, (u.displayName || 'User') + (id === me.uid ? ' (You)' : '')), el('small', null, id === c.createdBy ? 'Creator' : isAdmin(c, id) ? 'Admin' : (u.about || statusText(u)))); r.append(avatar(u, ''), info); if (id !== me.uid) { r.style.cursor = 'pointer'; r.onclick = () => { closeSheet(); if (isAdmin(c)) memberActions(c, id); else openPerson(id); }; } b.append(r); });
+      (c.members || []).forEach(id => { const u = users.get(id) || { id, displayName: 'User' }; const r = el('div', 'pick'); const info = el('span', 'pinfo'); info.append(nameEl(id, (u.displayName || 'User') + (id === me.uid ? ' (You)' : '')), el('small', null, id === c.createdBy ? 'Creator' : isAdmin(c, id) ? 'Admin' : (u.about || statusText(u)))); r.append(avatar(u, ''), info); if (id !== me.uid || isOwner()) { r.style.cursor = 'pointer'; r.onclick = () => { closeSheet(); if (id === me.uid) ownerSheet(id); else if (isAdmin(c)) memberActions(c, id); else if (isOwner()) ownerSheet(id); else openPerson(id); }; } b.append(r); });
+      if (c.type === 'group' && isAdmin(c)) b.append(rowBtn('userPlus', 'Add members', () => { closeSheet(); addMembersSheet(c); }));
       if (isAdmin(c)) { b.append(el('div', 'sub', 'Admin controls')); b.append(group(toggleRow('lock', 'Only admins can send messages', 'Everyone else can read, react and vote', c.postMode === 'admins', async on => { try { await updateDoc(doc(db, 'chats', c.id), { postMode: on ? 'admins' : 'all' }); toast(on ? 'Only admins can send now' : 'Everyone can send'); } catch { toast('Could not change. Publish the new Firestore rules.'); } }))); b.append(para('Tap a member to make them an admin or remove them. Pin an important message by selecting it and choosing Pin.')); }
       b.append(rowBtn('logout', c.type === 'community' ? 'Leave community' : 'Leave group', () => { closeSheet(); leaveChat(); }, 'danger'));
     }
@@ -1314,7 +1391,7 @@ function buildRow(id, m, pending) {
   const mine = m.uid === me.uid, group = active.type !== 'dm';
   const row = el('div', 'mrow' + (mine ? ' mine' : '')); row.dataset.id = id; row.dataset.ts = msOf(m.createdAt) || Date.now();
   if (!mine && group) { const av = avatar(users.get(m.uid) || { displayName: m.displayName }, 'sm', false); av.style.cursor = 'pointer'; av.onclick = () => openPerson(m.uid); row.append(av); }
-  const wrap = el('div', 'bwrap'); if (!mine && group) { const sn = el('div', 'sender', m.displayName || 'User'); sn.style.cursor = 'pointer'; sn.onclick = () => openPerson(m.uid); wrap.append(sn); }
+  const wrap = el('div', 'bwrap'); if (!mine && group) { const sn = el('div', 'sender', m.displayName || 'User'); { const t = vtick(m.uid); if (t) sn.append(t); } sn.style.cursor = 'pointer'; sn.onclick = () => openPerson(m.uid); wrap.append(sn); }
   const b = el('div', 'bubble');
   if (m.forwarded) b.append(el('div', 'fwd', '↪ Forwarded'));
   if (m.replyTo) { const q = el('div', 'quote'); q.append(el('b', null, m.replyTo.name || ''), el('span', null, m.replyTo.text || '')); b.append(q); }
@@ -1816,7 +1893,7 @@ function renderUpdates() {
   const pen = el('button', 'cb sm'); pen.type = 'button'; pen.innerHTML = ic('edit'); pen.setAttribute('aria-label', 'Text status'); pen.onclick = () => openComposer('text');
   const cam = el('button', 'cb sm'); cam.type = 'button'; cam.innerHTML = ic('camera'); cam.setAttribute('aria-label', 'Photo status'); cam.onclick = () => $('fileStatusCam').click();
   row.style.borderTop = '0'; row.append(main, pen, cam); box.append(row);
-  const by = new Map(); statuses.forEach(s => { if (s.uid === me.uid) return; if (!by.has(s.uid)) by.set(s.uid, []); by.get(s.uid).push(s); });
+  const by = new Map(); statuses.forEach(s => { if (s.uid === me.uid || !isKnown(s.uid)) return; if (!by.has(s.uid)) by.set(s.uid, []); by.get(s.uid).push(s); });
   const groups = [...by.entries()].sort((a, b) => msOf(b[1][b[1].length - 1].createdAt) - msOf(a[1][a[1].length - 1].createdAt));
   const lst = $('upList'); lst.innerHTML = ''; $('recentUpLabel').hidden = !groups.length;
   let unseen = false;
@@ -1889,8 +1966,8 @@ $('vDel').addEventListener('click', async () => {
 /* ================= CALLS TAB ================= */
 function renderPeople() {
   if (!me || tab !== 'calls') return;
-  const list = [...users.values()].filter(u => !blocked.has(u.id)), online = list.filter(isOnline).length;
-  $('peopleCount').textContent = `${list.length} ${list.length === 1 ? 'person' : 'people'} on Dxel Chat · ${online} online`;
+  const list = [...(users.get(me.uid) ? [users.get(me.uid)] : []), ...others()], online = list.filter(isOnline).length;
+  $('peopleCount').textContent = `${list.length - 1} ${list.length === 2 ? 'contact' : 'contacts'} · ${online} online`;
   list.sort((a, b) => (b.id === me.uid) - (a.id === me.uid) || (isOnline(b) - isOnline(a)) || (a.displayName || '').localeCompare(b.displayName || ''));
   const box = $('people'); box.innerHTML = '';
   list.forEach(u => {
@@ -1916,7 +1993,7 @@ function renderPeople() {
 }
 function callPeopleSheet() {
   openSheet('New call', b => {
-    const list = others(); if (!list.length) b.append(el('p', 'empty', 'No one else has joined yet.'));
+    const list = others(); if (!list.length) b.append(el('p', 'empty', 'No contacts yet. Add a friend with their link first.'));
     list.forEach(u => {
       const r = el('div', 'pick'), info = el('span', 'pinfo'); info.append(el('strong', null, u.displayName || u.email || 'User'), el('small', null, statusText(u)));
       const p = el('button', 'cb sm'); p.type = 'button'; p.innerHTML = ic('phone'); p.onclick = () => { closeSheet(); startCall('audio', u); };
@@ -2104,8 +2181,13 @@ async function deleteAccount() {
 }
 function showVerifyBar() {
   const u = auth.currentUser, need = !!u && !u.emailVerified && (u.providerData || []).some(p => p.providerId === 'password');
-  $('verifyBar').hidden = !need;
+  $('verifyBar').hidden = !need; $('verifyGate').hidden = true;
 }
+async function recheckVerified() { const u = auth.currentUser; if (!u || u.emailVerified) return; try { await u.reload(); if (u.emailVerified) await u.getIdToken(true); } catch {} showVerifyBar(); }
+document.addEventListener('visibilitychange', () => { if (!document.hidden) recheckVerified(); });
+$('vgDone').addEventListener('click', async () => { await recheckVerified(); toast(auth.currentUser?.emailVerified ? 'Email verified. Welcome!' : 'Not verified yet. Open the link in the email first.'); });
+$('vgResend').addEventListener('click', async () => { try { await sendEmailVerification(auth.currentUser); toast('Email sent. Check your inbox and spam'); } catch { toast('Could not send now. Try again in a few minutes.'); } });
+$('vgOut').addEventListener('click', () => { try { localStorage.removeItem('dxel-had-user'); } catch {} signOut(auth); });
 $('verifyResend').addEventListener('click', async () => { try { await sendEmailVerification(auth.currentUser); toast('Verification email sent. Check your inbox and spam'); } catch { toast('Could not send now. Try again later.'); } });
 $('verifyDone').addEventListener('click', async () => { try { await auth.currentUser.reload(); } catch {} showVerifyBar(); toast(auth.currentUser?.emailVerified ? 'Email verified. Thank you' : 'Not verified yet'); });
 const OWNER_CONTACT = 'the app owner'; // put your email here, for example 'you@example.com'
@@ -2712,6 +2794,19 @@ function listenIncoming() {
     $('incType').textContent = d.type === 'video' ? 'Incoming video call…' : 'Incoming voice call…'; $('incoming').hidden = false; startRing('in');
     if (document.hidden) sysNotify('Dxel Chat — incoming call', { body: (d.callerName || 'Someone') + ' is calling you', tag: 'call', requireInteraction: true, vibrate: [300, 150, 300] });
   }), err => console.warn('incoming', err.code));
+}
+const isMissedIn = c => c.calleeId === me.uid && (c.status === 'missed' || (c.status === 'ringing' && Date.now() - msOf(c.createdAt) > 60000)) && msOf(c.createdAt) > missedSeenAt;
+function markMissedSeen() { if (!me) return; missedSeenAt = Date.now(); lsSet('dxel-callseen-' + me.uid, missedSeenAt); $('callBadge').hidden = true; }
+function checkMissed() {
+  if (!me || !callsData) return; const list = callsData.filter(isMissedIn);
+  if (tab === 'calls' && !document.hidden) { if (list.length) markMissedSeen(); return; }
+  $('callBadge').hidden = !list.length; $('callBadge').textContent = list.length;
+  const fresh = list.filter(c => !missedAlerted.has(c.id)); fresh.forEach(c => missedAlerted.add(c.id)); if (!fresh.length) return;
+  const one = fresh.length === 1 ? fresh[0] : null;
+  const title = one ? 'Missed ' + (one.type === 'video' ? 'video' : 'voice') + ' call' : fresh.length + ' missed calls';
+  const body = one ? (one.callerName || 'Someone') : [...new Set(fresh.map(c => (c.callerName || 'Someone').split(' ')[0]))].slice(0, 3).join(', ');
+  if (document.hidden) sysNotify(title, { body, tag: 'missed-call', renotify: true }); else banner(title, body, null, 'phoneMissed');
+  if (prefs.sound) playTone(prefs.tone); if (prefs.vibe) navigator.vibrate?.(200);
 }
 function hideIncoming() { $('incoming').hidden = true; pendingIncoming = null; if (!call) stopRing(); }
 $('declineBtn').addEventListener('click', () => { const p = pendingIncoming; hideIncoming(); if (p) updateDoc(p.ref, { status: 'declined' }).catch(() => {}); });
