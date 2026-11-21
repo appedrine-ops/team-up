@@ -902,7 +902,7 @@ function teardown() {
   clearInterval(heartbeat); clearInterval(refresher);
   if (call) endCall(true); hideIncoming(); closeOverlays(); if (curScreen !== 'main') { closeChatState(); setScreen('main'); }
   Object.assign(E2E, { priv: null, pubStr: '', ready: false, needRestore: false, stale: false, hasBackup: false, backup: null, started: false }); keyCache.clear();
-  users.clear(); contactIds = new Set(); missedAlerted.clear(); chats.clear(); communities.clear(); blocked.clear(); known.clear(); statuses = []; callsData = []; generalLast = null; chatsReady = false;
+  pvCache = {}; pvQueue.length = 0; users.clear(); contactIds = new Set(); missedAlerted.clear(); chats.clear(); communities.clear(); blocked.clear(); known.clear(); statuses = []; callsData = []; generalLast = null; chatsReady = false;
   $('chatList').innerHTML = ''; $('people').innerHTML = ''; $('upList').innerHTML = '';
 }
 async function beat() {
@@ -916,7 +916,7 @@ function startSession() {
   hiddenIds = new Set([...lsGet('dxel-hidden-' + me.uid, []), ...lsGet('teamup-hidden-' + me.uid, [])]);
   hiddenChats = lsGet('dxel-hchats-' + me.uid, {}); showTeam = lsGet('dxel-showteam', false);
   cprefs = Object.assign({ pin: {}, mute: {}, arch: {} }, lsGet('dxel-cprefs-' + me.uid, {})); stars = lsGet('dxel-stars-' + me.uid, []);
-  missedSeenAt = lsGet('dxel-callseen-' + me.uid, 0); if (!missedSeenAt) { missedSeenAt = Date.now(); lsSet('dxel-callseen-' + me.uid, missedSeenAt); }
+  pvCache = lsGet('dxel-pv-' + me.uid, {}) || {}; missedSeenAt = lsGet('dxel-callseen-' + me.uid, 0); if (!missedSeenAt) { missedSeenAt = Date.now(); lsSet('dxel-callseen-' + me.uid, missedSeenAt); }
   setTab('chats'); showVerifyBar(); setTimeout(() => { beat(); registerDevice(); }, 1200);
   let _later = false; const startLater = () => { if (_later || !me) return; _later = true; startSecondary(); };
   setTimeout(startLater, 2500);
@@ -936,7 +936,7 @@ function startSession() {
     snap.docChanges().forEach(ch => {
       const id = ch.doc.id;
       if (ch.type === 'removed') { chats.delete(id); known.delete(id); return; }
-      const d = { id, ...ch.doc.data({ serverTimestamps: 'estimate' }) }; chats.set(id, d);
+      const d = { id, ...ch.doc.data({ serverTimestamps: 'estimate' }) }; chats.set(id, d); wantPreview(d);
       const ms = msOf(d.lastAt);
       if (first || !known.has(id)) { if (readMap[id] === undefined) { readMap[id] = ms; saveRead(); } known.set(id, ms); }
       else noteIncoming(d);
@@ -1003,12 +1003,29 @@ function chatAvatar(c, size = '') {
 function chatMs(c) { return c.id === 'general' ? (generalLast?.ms || 0) : msOf(c.lastAt); }
 function chatLastUid(c) { return c.id === 'general' ? generalLast?.uid : c.lastUid; }
 function isUnread(c) { return chatMs(c) > (readMap[c.id] || 0) && chatLastUid(c) && chatLastUid(c) !== me.uid && !(active?.id === c.id && curScreen === 'chat'); }
+/* Locked chats only store a placeholder in the shared chat record. The real last message is read and unlocked on THIS phone, kept on this phone only, and shown in the list without a padlock. */
+const PV = '🔒 Message'; let pvCache = {}; const pvQueue = []; let pvBusy = false;
+const lastTextOf = c => c.lastText === PV ? (pvCache[c.id]?.text || 'Message') : c.lastText;
+async function fetchPv(id) {
+  try {
+    const c = chats.get(id); if (!c || !me || c.lastText !== PV) return;
+    const sn = await getDocs(query(collection(db, 'chats', id, 'messages'), orderBy('createdAt', 'desc'), limit(1))); const d = sn.docs[0]; if (!d) return;
+    const raw = d.data({ serverTimestamps: 'estimate' }); const m = raw.type === 'enc' ? await openMsg(raw, id) : raw; if (m.locked) return;
+    pvCache[id] = { ms: msOf(c.lastAt) || Date.now(), text: previewOf(m).slice(0, 90) }; lsSet('dxel-pv-' + me.uid, pvCache); renderChats();
+  } catch {}
+}
+function wantPreview(c) {
+  if (!c || c.id === 'general' || c.lastText !== PV) return; const h = pvCache[c.id]; if (h && h.ms >= (msOf(c.lastAt) || 0)) return;
+  if (!pvQueue.includes(c.id)) pvQueue.push(c.id); runPv();
+}
+async function runPv() { if (pvBusy) return; pvBusy = true; try { while (pvQueue.length && me) { await fetchPv(pvQueue.shift()); await new Promise(r => setTimeout(r, 120)); } } finally { pvBusy = false; } }
 function chatPreview(c) {
   if (c.id === 'general') { if (!generalLast) return 'Say hello to everyone'; return (generalLast.uid === me.uid ? 'You: ' : (generalLast.name ? generalLast.name.split(' ')[0] + ': ' : '')) + generalLast.text; }
   if (!c.lastText) return c.type === 'community' ? (c.description || 'Community') : 'Say hello';
   const mine = c.lastUid === me.uid;
-  if (c.type === 'dm') return (mine ? 'You: ' : '') + c.lastText;
-  return (mine ? 'You: ' : (c.lastName ? c.lastName.split(' ')[0] + ': ' : '')) + c.lastText;
+  const lt = lastTextOf(c);
+  if (c.type === 'dm') return (mine ? 'You: ' : '') + lt;
+  return (mine ? 'You: ' : (c.lastName ? c.lastName.split(' ')[0] + ': ' : '')) + lt;
 }
 function chatEntries(archived = false) {
   const arr = [];
@@ -1067,7 +1084,8 @@ function markRead(id) { const c = id === 'general' ? GENERAL : chats.get(id); re
 function noteIncoming(d) {
   const ms = msOf(d.lastAt), prev = known.get(d.id) || 0; known.set(d.id, Math.max(ms, prev));
   if (ms > prev && d.lastUid && d.lastUid !== me.uid && !cprefs.mute[d.id] && !(curScreen === 'chat' && active?.id === d.id && !document.hidden)) {
-    notify(chatTitle(d), (d.type !== 'dm' && d.lastName ? d.lastName + ': ' : '') + d.lastText, false, d.id);
+    const go = () => notify(chatTitle(d), (d.type !== 'dm' && d.lastName ? d.lastName + ': ' : '') + lastTextOf(chats.get(d.id) || d), false, d.id);
+    if (d.lastText === PV) fetchPv(d.id).then(go, go); else go();
   }
 }
 function sysNotify(title, opts) {
