@@ -880,6 +880,7 @@ $('splashLogo').src = LOGO; let authKnown = false;
 // Apps like WhatsApp open links in their own mini browser. Accounts made there are not shared with Chrome or the installed app.
 const inAppBrowser = /; wv\)|FBAN|FBAV|Instagram|Line\/|MicroMessenger|Snapchat|TikTok/i.test(navigator.userAgent) && !matchMedia('(display-mode: standalone)').matches;
 $('wvHint').hidden = !inAppBrowser;
+const maybeReady = () => { if (!$('splash').hidden && chatsReady && !pvBusy && !pvQueue.length) endSplash(); };
 const endSplash = () => { $('splash').hidden = true; const bb = document.getElementById('bootBlock'); if (bb) bb.remove(); };
 const hadUser = (() => { try { return localStorage.getItem('dxel-had-user') === '1'; } catch { return false; } })();
 // Returning people wait longer before we ever show the sign-in form (slow networks used to trigger it by mistake)
@@ -888,10 +889,10 @@ if (hadUser) {
   // Returning person: show the app frame with placeholder rows after a moment instead of a full-screen wait
   const bb = document.createElement('div'); bb.id = 'bootBlock'; bb.style.cssText = 'position:fixed;inset:0;z-index:299;background:transparent'; document.body.append(bb);
   const cl = $('chatList'); if (cl && !cl.children.length) { for (let i = 0; i < 7; i++) { const r = document.createElement('div'); r.className = 'skelrow'; r.innerHTML = '<span class="skav"></span><span class="sklines"><i></i><i></i></span>'; cl.append(r); } }
-  setTimeout(() => { if (!authKnown) { $('splash').hidden = true; } }, 900);
+  setTimeout(() => { endSplash(); }, 6700); // never wait longer than 6.7 s
 }
 onAuthStateChanged(auth, user => {
-  authKnown = true; endSplash(); me = user; $('authOverlay').hidden = !!user;
+  authKnown = true; if (!(user && hadUser)) endSplash(); me = user; $('authOverlay').hidden = !!user;
   try { if (user) localStorage.setItem('dxel-had-user', '1'); } catch {}
   if (!user) { teardown(); return; }
   $('authPassword').value = ''; $('authConfirm').value = '';
@@ -941,7 +942,7 @@ function startSession() {
       if (first || !known.has(id)) { if (readMap[id] === undefined) { readMap[id] = ms; saveRead(); } known.set(id, ms); }
       else noteIncoming(d);
     });
-    chatsReady = true; syncWatch(); renderChats(); if (active) { renderChatHeader(); applyChatRules(); } setTimeout(startLater, 300);
+    chatsReady = true; syncWatch(); renderChats(); setTimeout(maybeReady, 80); if (active) { renderChatHeader(); applyChatRules(); } setTimeout(startLater, 300);
     if (pendingChat && (pendingChat === 'general' || chats.has(pendingChat))) { const t = pendingChat; pendingChat = null; try { history.replaceState(history.state, '', location.pathname); } catch {} openChat(t); }
   }, err => { console.error(err); toast('Could not load chats. Publish the Firestore rules.'); });
   listenIncoming();
@@ -1018,7 +1019,7 @@ function wantPreview(c) {
   if (!c || c.id === 'general' || c.lastText !== PV) return; const h = pvCache[c.id]; if (h && h.ms >= (msOf(c.lastAt) || 0)) return;
   if (!pvQueue.includes(c.id)) pvQueue.push(c.id); runPv();
 }
-async function runPv() { if (pvBusy) return; pvBusy = true; try { while (pvQueue.length && me) { await fetchPv(pvQueue.shift()); await new Promise(r => setTimeout(r, 120)); } } finally { pvBusy = false; } }
+async function runPv() { if (pvBusy) return; pvBusy = true; try { while (pvQueue.length && me) { await fetchPv(pvQueue.shift()); await new Promise(r => setTimeout(r, 120)); } } finally { pvBusy = false; maybeReady(); } }
 function chatPreview(c) {
   if (c.id === 'general') { if (!generalLast) return 'Say hello to everyone'; return (generalLast.uid === me.uid ? 'You: ' : (generalLast.name ? generalLast.name.split(' ')[0] + ': ' : '')) + generalLast.text; }
   if (!c.lastText) return c.type === 'community' ? (c.description || 'Community') : 'Say hello';
